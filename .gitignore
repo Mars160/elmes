@@ -8,7 +8,6 @@ wheels/
 
 /evaluation_result*/
 /results*/
-tests/
 
 # Virtual environments
 .venv
