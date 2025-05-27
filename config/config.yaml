@@ -1,0 +1,18 @@
+# Scenario configurations
+scenarios:
+  knowledge_explanation:
+    id: 1
+    name: 知识点讲解
+    tasks: 4
+  guided_teaching:
+    id: 2
+    name: 引导式讲题
+    tasks: 0
+  interdisciplinary_task:
+    id: 3
+    name: 跨学科任务
+    tasks: 0
+  contextual_problem:
+    id: 4
+    name: 情境问题
+    tasks: 7

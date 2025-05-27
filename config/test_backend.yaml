@@ -1,0 +1,33 @@
+# 受测模型后端配置文件
+default:
+  timeout: 60
+  max_retries: 3
+  temperature: 0.7
+  max_tokens: 4000
+
+# OpenAI配置
+openai:
+  model_name: "gpt-3.5-turbo"
+  api_key: ""  # 从环境变量OPENAI_API_KEY读取
+  api_base: "http://49.51.37.239:9005/v1"
+  timeout: 30
+  max_retries: 3
+  system_prompt: "你是一个有帮助的AI助手，请用中文回答。"
+
+# Ollama本地配置
+ollama:
+  model_name: "qwen2.5:14b"
+  api_base: "http://localhost:11434"
+  timeout: 120
+  max_retries: 3
+  system_prompt: "你是一个有帮助的AI助手，请用中文回答问题。"
+
+# DeepSeek配置
+deepseek:
+  model_name: "deepseek-chat"
+  api_key: ""  # 从环境变量DEEPSEEK_API_KEY读取
+  api_base: "https://api.deepseek.com/v1"
+  timeout: 60
+  max_retries: 3
+  system_prompt: "你是一个有帮助的AI助手，请用中文回答。"
+
