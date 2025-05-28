@@ -6,6 +6,8 @@ dist/
 wheels/
 *.egg-info
 
+.vscode
+
 /evaluation_result*/
 /results*/
 
