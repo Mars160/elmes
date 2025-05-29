@@ -1,13 +1,14 @@
 import os
 import json
 import logging
-from typing import Dict, Any, List, Optional, Type
+from typing import Dict, Any, List, Optional, Type, override
 import time
+from datetime import datetime
 
 from src.executor.base import Executor, GeneratedPrompt
 from src.backend.base import Backend
 from src.prompts.base import BasePromptGenerator
-from src.prompts.knowledge_explanation import KnowledgeExplanationPromptGenerator
+from src.prompts.guided_teaching import GuidedTeachingPromptGenerator
 from src.backend.openai_backend import OpenAIBackend
 
 
@@ -18,7 +19,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class MultiTurnExecutor(Executor):
+class MultiAgentExecutor(Executor):
     """
     多轮对话执行器，提供多轮对话的执行功能实现
     """
@@ -38,7 +39,7 @@ class MultiTurnExecutor(Executor):
             output_dir: 输出目录
         """
         super().__init__(backend, prompt_generator, output_dir)
-        self.conversation_history = []  # 对话历史记录
+        self.conversation_history: Dict[List[Dict[str, Any]]] = {}
         self.conversation_state = {}  # 对话状态信息
         logger.debug(
             "多轮对话执行器初始化参数: backend=%s, prompt_generator=%s, output_dir=%s",
@@ -48,7 +49,7 @@ class MultiTurnExecutor(Executor):
         )
         logger.info("多轮对话执行器已初始化")
 
-    def generate_prompt(self, task_id: Any, **kwargs) -> GeneratedPrompt:
+    def generate_prompt(self, task_id: Any, **kwargs) -> Dict[str, Any]:
         logger.debug("开始生成多轮对话提示词，任务ID: %s，参数: %s", task_id, kwargs)
         logger.info("开始生成多轮对话的提示词，任务ID: %s", task_id)
         """
@@ -56,35 +57,72 @@ class MultiTurnExecutor(Executor):
         """
         # 获取提示词生成器生成的提示词
         prompt = self.prompt_generator.generate_prompt(task_id, **kwargs)
-
-        if isinstance(prompt, list) and all(isinstance(m, dict) for m in prompt):
-            # 如果返回的是消息列表，直接使用
-            messages = prompt
-        else:
-            # 尝试从提示词中提取系统提示词和用户提示词
-            system_prompt = kwargs.get("system_prompt", "你是一个有帮助的AI助手。")
-            if isinstance(prompt, dict):
-                # 如果返回的是字典格式，尝试提取系统提示词和用户提示词
-                system_prompt = prompt.get("system_prompt", system_prompt)
-                user_prompt = prompt.get("user_prompt", prompt.get("prompt", ""))
-            else:
-                # 如果是字符串，直接作为用户提示词
-                user_prompt = prompt
+        teacher_prompt = prompt.get("teacher", [])
+        student_prompt = prompt.get("student", [])
 
         # 合并历史对话和新的用户输入
-        messages = [
-            {"role": "system", "content": system_prompt}
-        ] + self.conversation_history
-        if user_prompt:
-            messages.append({"role": "user", "content": user_prompt})
+        teacher_messages = teacher_prompt + self.conversation_history.get("teacher", [])
+        student_messages = student_prompt + self.conversation_history.get("student", [])
+
+        messages = {
+            "teacher": teacher_messages,
+            "student": student_messages,
+        }
 
         logger.debug("多轮对话生成的提示词: %s", messages)
         logger.info("多轮对话的提示词生成完成，任务ID: %s", task_id)
-        return GeneratedPrompt(
-            messages=messages,
-            task_id=task_id,
-            original_prompt=prompt,
+        return messages
+
+    @override
+    def execute(self, task_id: Any, save: bool = True, **kwargs) -> Dict[str, Any]:
+        """
+        执行完整流程：生成提示词 -> 调用模型 -> 处理响应 -> 保存结果
+
+        Args:
+            task_id: 任务ID
+            save: 是否保存结果
+            **kwargs: 其他参数
+
+        Returns:
+            Dict[str, Any]: 执行结果
+        """
+        # 记录开始时间
+        start_time = time.time()
+
+        # 1. 生成提示词
+        prompt_data = self.generate_prompt(task_id, **kwargs)
+
+        teacher_prompt = prompt_data.get("teacher", [])
+        student_prompt = prompt_data.get("student", [])
+
+        teacher_response = self.call_model(teacher_prompt, **kwargs)
+        teacher_result = self.process_response(
+            teacher_response, prompt=prompt_data, **kwargs
         )
+        print(teacher_result)
+
+        student_response = self.call_model(student_prompt, **kwargs)
+
+        # 3. 处理响应
+        result = self.process_response(response, prompt=prompt_data, **kwargs)
+
+        # 4. 记录执行信息
+        # 获取后端类型名称（如"ollama", "openai"等）
+        backend_type = self.backend.__class__.__name__.lower().replace("backend", "")
+
+        result["execution_info"] = {
+            "task_id": task_id,
+            "execution_time": time.time() - start_time,
+            "timestamp": datetime.now().isoformat(),
+            "backend": backend_type,
+            "model_name": getattr(self.backend, "model_name", "unknown"),
+        }
+
+        # 5. 保存结果（如果需要）
+        if save:
+            result["saved_path"] = self.save_result(result, **kwargs)
+
+        return result
 
     def call_model(self, messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
         logger.debug(
@@ -170,7 +208,10 @@ class MultiTurnExecutor(Executor):
         """
         开始新的多轮对话
         """
-        self.conversation_history = []
+        self.conversation_history: Dict[List[Dict[str, Any]]] = {
+            "teacher": [],
+            "student": [],
+        }
         self.conversation_state = {}
 
         prompt = self.generate_prompt(task_id, **kwargs)
@@ -233,7 +274,7 @@ class MultiTurnExecutor(Executor):
 
 if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
-    prompt_generator = KnowledgeExplanationPromptGenerator()
+    prompt_generator = GuidedTeachingPromptGenerator()
     backend = OpenAIBackend(
         model_name="gpt-4o-mini",
         api_base="https://api.gptgod.online/v1/",
@@ -241,7 +282,7 @@ if __name__ == "__main__":
     )
     task_id = 1
     # 正确初始化执行器，使用字符串作为输出目录
-    executor = MultiTurnExecutor(backend, prompt_generator, "results")
+    executor = MultiAgentExecutor(backend, prompt_generator, "results")
     executor.initialize()
     for i in range(1, 3):
         executor.execute(i)
