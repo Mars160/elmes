@@ -12,6 +12,7 @@ wheels/
 /results*/
 
 config/*_backend.yaml
+config/agents/*.yaml
 
 # Virtual environments
 .venv
