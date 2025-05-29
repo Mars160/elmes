@@ -11,5 +11,7 @@ wheels/
 /evaluation_result*/
 /results*/
 
+config/*_backend.yaml
+
 # Virtual environments
 .venv
