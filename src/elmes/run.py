@@ -5,6 +5,7 @@ from typing import Dict
 from tqdm.asyncio import tqdm
 
 from langgraph.graph.state import CompiledStateGraph
+from langgraph.errors import GraphRecursionError
 
 from elmes.agent import init_agent_map
 from elmes.config import CONFIG
@@ -33,14 +34,20 @@ async def run(workers_num: int = CONFIG.globals.concurrency):
         if isinstance(prompt, Prompt):
             prompt = prompt.model_dump()
         async with sem:
-            await agent.ainvoke(
-                prompt,
-                {
-                    "configurable": {"thread_id": "0"},
-                    "recursion_limit": CONFIG.globals.recursion_limit,
-                },
-                stream_mode="values",
-            )
+            try:
+                await agent.ainvoke(
+                    prompt,
+                    {
+                        "configurable": {"thread_id": "0"},
+                        "recursion_limit": CONFIG.globals.recursion_limit,
+                    },
+                    stream_mode="values",
+                )
+            except GraphRecursionError:
+                print(
+                    f"Recursion limit {CONFIG.globals.recursion_limit} reached for one task"
+                )
+                return
 
     tasks = []
     for agent, prompt in agents:
