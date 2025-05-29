@@ -8,6 +8,9 @@ scenarios:
     id: 2
     name: 引导式讲题
     tasks: 0
+    end_keywords:
+      - 下课
+      - <end>
   interdisciplinary_task:
     id: 3
     name: 跨学科任务
