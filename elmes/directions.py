@@ -1,4 +1,3 @@
-from tokenize import group
 from typing import Dict, Any, Sequence, Union, Tuple
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.graph import StateGraph, START, END
@@ -8,7 +7,7 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 import sqlite3
 
 from entity import AgentConfig, MEMORY_ID
-from router import *
+from router import *  # noqa: F403
 
 
 def add_node_to_graph(graph: StateGraph, node_id: str, node_instance: Any) -> None:
@@ -61,7 +60,7 @@ if __name__ == "__main__":
     from pathlib import Path
     from elmes.model import init_model_map_from_dict
     from elmes.agent import init_agent_map_from_dict
-    from langchain.globals import set_debug
+    # from langchain.globals import set_debug
 
     # set_debug(True)
 
