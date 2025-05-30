@@ -14,5 +14,9 @@ wheels/
 config/*_backend.yaml
 config/agents/*.yaml
 
+*.db
+*.sqlite
+*.bin
+
 # Virtual environments
 .venv
