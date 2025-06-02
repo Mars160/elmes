@@ -1,5 +1,4 @@
 import yaml
-import json
 from elmes.utils import extract
 from pathlib import Path
 from typing import Dict, Any

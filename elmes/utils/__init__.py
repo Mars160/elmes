@@ -1,7 +1,9 @@
+from copy import deepcopy
 import itertools
 import yaml
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Union
 from pathlib import Path
+from elmes.entity import Prompt
 
 
 def parse_yaml(path: Path) -> Dict[str, Any]:  # type: ignore
@@ -11,10 +13,29 @@ def parse_yaml(path: Path) -> Dict[str, Any]:  # type: ignore
             return d
 
 
+def replace_prompt(
+    prompt: Union[List[Dict[str, str]], List[Prompt]], prompt_map: Dict[str, str]
+) -> Union[List[Dict[str, str]], List[Prompt]]:
+    result = []
+    if len(prompt) > 0:
+        for p in prompt:
+            if isinstance(p, Prompt):
+                for k, v in prompt_map.items():
+                    p.content = p.content.replace("{" + k + "}", v)
+                result.append(p)
+            elif isinstance(p, Dict):
+                r = {"role": p["role"]}
+                for k, v in prompt_map.items():
+                    r["content"] = p["content"].replace("{" + k + "}", v)
+                result.append(r)
+    return result
+
+
 def extract(data: Dict[str, Any], key: str) -> List[Dict[str, Any]] | Dict[str, Any]:
     if key == "tasks":
         tasks = data["tasks"]
         mode = tasks["mode"].lower()
+        start_prompt = tasks["start_prompt"]
         if mode == "union":
             content = tasks["content"]
             subcontent_len: List[int] = []
@@ -34,10 +55,16 @@ def extract(data: Dict[str, Any], key: str) -> List[Dict[str, Any]] | Dict[str, 
             cc: List[Dict[str, Any]] = []
             for c in combinations:
                 entry = dict(zip(keys, c))
+                entry["prompt"] = replace_prompt(start_prompt, entry)
                 cc.append(entry)
             return cc
         elif mode == "iter":
-            return data["tasks"]["content"]
+            result = []
+            for c in data["tasks"]["content"]:
+                entry = c
+                entry["prompt"] = replace_prompt(start_prompt, entry)
+                result.append(entry)
+            return result
         else:
             raise NotImplementedError
     else:

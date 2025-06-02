@@ -6,6 +6,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 from typing import Any, Dict, List, Union, Callable, Optional, Tuple
 from entity import AgentConfig
+from utils import replace_prompt
 
 
 def _init_agent_from_dict(
@@ -19,12 +20,7 @@ def _init_agent_from_dict(
     else:
         ac = cfg
     if dynamic_prompt_map is not None:
-        p = []
-        for item in ac.prompt:
-            for k, v in dynamic_prompt_map.items():
-                item.content = item.content.replace("{" + k + "}", v)
-            p.append(item.model_dump())
-        ac.prompt = p
+        ac.prompt = replace_prompt(ac.prompt, dynamic_prompt_map)  # type: ignore
     m = model_map[ac.model]
 
     def chatbot(state: AgentState) -> Dict[str, List[Any]]:
