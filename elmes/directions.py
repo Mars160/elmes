@@ -1,4 +1,5 @@
-from typing import Dict, Any, Sequence, Union, Tuple
+from typing import Dict, Any, Sequence, Union, Tuple, Optional
+from uuid import uuid4
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt.chat_agent_executor import AgentState
@@ -6,7 +7,7 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 
 import sqlite3
 
-from entity import AgentConfig, MEMORY_ID
+from entity import AgentConfig
 from router import *  # noqa: F403
 
 
@@ -20,7 +21,10 @@ def add_node_to_graph(graph: StateGraph, node_id: str, node_instance: Any) -> No
 def apply_agent_direction_from_dict(
     cfg: Union[Dict[str, Any], Sequence[str]],
     agent_map: Dict[str, Tuple[CompiledStateGraph, AgentConfig]],
-) -> CompiledStateGraph:
+    memory_id: Optional[str] = None,
+) -> Tuple[CompiledStateGraph, str]:
+    if memory_id is None:
+        memory_id = str(uuid4())
     if isinstance(cfg, dict):
         directions = cfg.get("directions")
         if not directions:
@@ -52,7 +56,7 @@ def apply_agent_direction_from_dict(
         graph.add_edge(start_node, end_node)
     conn = sqlite3.connect("agent_graph.db", check_same_thread=False)
     memory = SqliteSaver(conn)
-    return graph.compile(checkpointer=memory)
+    return graph.compile(checkpointer=memory), memory_id
 
 
 if __name__ == "__main__":
@@ -84,7 +88,7 @@ if __name__ == "__main__":
     directions = parse_yaml(
         Path(__file__).parent.parent / "guided_teaching" / "directions.yaml"
     )
-    graph = apply_agent_direction_from_dict(directions, agent_map)
+    graph, memory_id = apply_agent_direction_from_dict(directions, agent_map)
     # print(graph.get_graph().draw_mermaid())
 
     msg = {
@@ -94,7 +98,7 @@ if __name__ == "__main__":
 
     events = graph.stream(
         msg,
-        {"configurable": {"thread_id": MEMORY_ID}},
+        {"configurable": {"thread_id": memory_id}},
         stream_mode="values",
     )
     for event in events:

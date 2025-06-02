@@ -3,10 +3,6 @@ from pydantic import BaseModel
 from typing_extensions import TypedDict
 from langgraph.graph.message import add_messages
 
-import uuid
-
-MEMORY_ID = str(uuid.uuid4())
-
 
 # Common
 class State(TypedDict):
@@ -41,15 +37,9 @@ class AgentMemoryConfig(BaseModel):
 class AgentConfig(BaseModel):
     model: str
     prompt: List[Prompt]
-    memory: AgentMemoryConfig = AgentMemoryConfig(enable=True, id=MEMORY_ID)
+    memory: AgentMemoryConfig = AgentMemoryConfig(enable=True)
 
     checkpointer: Optional[Any] = None
-
-    # 添加初始化方法
-    def __init__(self, **data):
-        super().__init__(**data)
-        if self.memory.id is None:
-            self.memory.id = MEMORY_ID
 
 
 # Direction
