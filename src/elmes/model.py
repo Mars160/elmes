@@ -3,7 +3,7 @@ from langchain.chat_models import init_chat_model
 from langchain.chat_models.base import BaseChatModel
 
 
-from entity import ModelConfig
+from elmes.entity import ModelConfig
 
 
 def init_chat_model_from_dict(

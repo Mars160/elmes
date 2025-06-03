@@ -5,7 +5,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import AIMessage, HumanMessage
 
 from typing import Any, Dict, List, Union, Callable, Optional, Tuple
-from entity import AgentConfig
+from elmes.entity import AgentConfig
 from elmes.utils import replace_prompt
 
 
