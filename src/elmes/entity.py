@@ -18,6 +18,7 @@ class Memory(BaseModel):
 
 # Global
 class GlobalConfig(BaseModel):
+    concurrency: int = 8
     recursion_limit: int = 25
     memory: Memory = Memory()
 

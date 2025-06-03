@@ -20,5 +20,18 @@ dependencies = [
     "seaborn>=0.13.2",
 ]
 
+[project.scripts]
+elmes = "elmes.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [tool.uv.sources]
 elmes = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "click>=8.2.1",
+    "hatch>=1.14.1",
+]

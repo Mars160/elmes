@@ -14,7 +14,7 @@ from elmes.model import init_model_map
 from elmes.utils import replace_prompt
 
 
-async def run(workers_num: int = 16):
+async def run(workers_num: int = CONFIG.globals.concurrency):
     sem = asyncio.Semaphore(workers_num)
 
     model_map = init_model_map()
