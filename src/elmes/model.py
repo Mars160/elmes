@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union
+from typing import Dict
 from langchain.chat_models import init_chat_model
 from langchain.chat_models.base import BaseChatModel
 
@@ -24,7 +24,7 @@ def init_chat_model_from_dict(mc: ModelConfig) -> BaseChatModel:
     return llm
 
 
-def init_model_map_from_dict(cfg: Dict[str, Any]) -> Dict[str, BaseChatModel]:
+def init_model_map_from_dict() -> Dict[str, BaseChatModel]:
     cfg = CONFIG.models
     result = {}
     for k, v in cfg.items():
@@ -33,11 +33,5 @@ def init_model_map_from_dict(cfg: Dict[str, Any]) -> Dict[str, BaseChatModel]:
 
 
 if __name__ == "__main__":
-    from elmes.utils import parse_yaml
-    from pathlib import Path
-
-    models = parse_yaml(
-        Path(__file__).parent.parent / "guided_teaching" / "models.yaml"
-    )["models"]
-    a = init_model_map_from_dict(models)
+    a = init_model_map_from_dict()
     print(a)

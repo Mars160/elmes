@@ -4,7 +4,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import AIMessage, HumanMessage
 
-from typing import Any, Dict, List, Union, Callable, Optional, Tuple
+from typing import Any, Dict, List, Callable, Optional, Tuple
 
 from elmes.entity import AgentConfig
 from elmes.utils import replace_prompt
@@ -46,7 +46,7 @@ def _init_agent_from_dict(
 def init_agent_map_from_dict(
     model_map: Dict[str, BaseChatModel],
     dynamic_prompt_map: Optional[Dict[str, str]] = None,
-) -> Dict[str, Tuple[CompiledStateGraph, AgentConfig]]:
+) -> Tuple[Dict[str, Tuple[CompiledStateGraph, AgentConfig]], Optional[Dict[str, str]]]:
     result = {}
     acs = CONFIG.agents
     for k, v in acs.items():
@@ -63,30 +63,4 @@ def init_agent_map_from_dict(
         graph.add_edge(START, "agent")
         graph.add_edge("agent", END)
         result[k] = (graph.compile(checkpointer=memory), ac)
-    return result
-
-
-if __name__ == "__main__":
-    from elmes.utils import parse_yaml
-    from pathlib import Path
-    from elmes.model import init_model_map_from_dict
-
-    models = parse_yaml(
-        Path(__file__).parent.parent.parent / "guided_teaching" / "models.yaml"
-    )["models"]
-    model_map = init_model_map_from_dict(models)
-
-    agents = parse_yaml(
-        Path(__file__).parent.parent.parent / "guided_teaching" / "agents.yaml"
-    )["agents"]
-    b = init_agent_map_from_dict(
-        agents, model_map, {"image": "西瓜", "question": "菠萝"}
-    )
-
-    teacher, ac = b["teacher"]
-
-    a = teacher.invoke(
-        {"messages": [{"role": "user", "content": "上海今天天气咋样"}]},
-        {"configurable": {"thread_id": ac.memory.id}},
-    )
-    print(a)
+    return result, dynamic_prompt_map

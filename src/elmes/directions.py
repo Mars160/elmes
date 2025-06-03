@@ -1,9 +1,10 @@
-from typing import Dict, Any, Sequence, Union, Tuple, Optional
+import asyncio
+from typing import Dict, Any, Tuple, Optional
 from uuid import uuid4
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt.chat_agent_executor import AgentState
-from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 
 import sqlite3
 
@@ -19,9 +20,10 @@ def add_node_to_graph(graph: StateGraph, node_id: str, node_instance: Any) -> No
         pass
 
 
-def apply_agent_direction_from_dict(
+async def apply_agent_direction_from_dict(
     agent_map: Dict[str, Tuple[CompiledStateGraph, AgentConfig]],
     memory_id: Optional[str] = None,
+    task: Optional[Dict[str, str]] = None,
 ) -> Tuple[CompiledStateGraph, str]:
     if memory_id is None:
         memory_id = str(uuid4())
@@ -49,51 +51,56 @@ def apply_agent_direction_from_dict(
             if not pregel_instance or not agent_config:
                 raise ValueError(f"Invalid configuration for {end_node}.")
         graph.add_edge(start_node, end_node)
-    memory = InMemorySaver()
+    # conn = aiosqlite.connect(f"{memory_id}.db", check_same_thread=False)
+    conn = sqlite3.connect(f"{memory_id}.db", check_same_thread=False)
+    if task is not None:
+        cursor = conn.cursor()
+        # 创建一个名为task的表格，用于存储task里的key-value
+        sql = "create table task (key TEXT, value TEXT)"
+        cursor.execute(sql)
+        sql = "insert into task (key, value) values (?, ?)"
+        for key, value in task.items():
+            cursor.execute(sql, (key, value))
+            conn.commit()
+        cursor.close()
+    memory = SqliteSaver(conn)
     return graph.compile(checkpointer=memory), memory_id
 
 
 if __name__ == "__main__":
-    from pathlib import Path
-    from elmes.utils import parse_yaml
     from elmes.model import init_model_map_from_dict
     from elmes.agent import init_agent_map_from_dict
     # from langchain.globals import set_debug
 
     # set_debug(True)
 
-    models = parse_yaml(
-        Path(__file__).parent.parent.parent / "guided_teaching" / "models.yaml"
-    )["models"]
-    model_map = init_model_map_from_dict(models)
+    async def main():
+        model_map = init_model_map_from_dict()
 
-    agents = parse_yaml(
-        Path(__file__).parent.parent.parent / "guided_teaching" / "agents.yaml"
-    )["agents"]
-    agent_map = init_agent_map_from_dict(
-        model_map,
-        {
-            "image": "无法独立完成最基础的计算，阅读只能逐字识别没有理解，学科知识一无所知。课堂上经常发呆或睡觉，作业本脏乱不堪，老师批评时表现出完全的冷漠。",
-            "question": "师徒两人装配自行车，师傅每天装配32辆，徒弟每天比师傅少装配8辆．经过多少天师傅比徒弟多装配56辆？",
-        },
-    )
+        agent_map, task = init_agent_map_from_dict(
+            model_map,
+            {
+                "image": "无法独立完成最基础的计算，阅读只能逐字识别没有理解，学科知识一无所知。课堂上经常发呆或睡觉，作业本脏乱不堪，老师批评时表现出完全的冷漠。",
+                "question": "师徒两人装配自行车，师傅每天装配32辆，徒弟每天比师傅少装配8辆．经过多少天师傅比徒弟多装配56辆？",
+            },
+        )
 
-    directions = parse_yaml(
-        Path(__file__).parent.parent.parent / "guided_teaching" / "directions.yaml"
-    )
-    graph, memory_id = apply_agent_direction_from_dict(agent_map)
-    # print(graph.get_graph().draw_mermaid())
+        graph, memory_id = await apply_agent_direction_from_dict(agent_map, task=task)
 
-    msg = {
-        "role": "user",
-        "conent": "这是本次一对一辅导所要讲的习题: 师徒两人装配自行车，师傅每天装配32辆，徒弟每天比师傅少装配8辆．经过多少天师傅比徒弟多装配56辆？",
-    }
+        # print(graph.get_graph().draw_mermaid())
 
-    events = graph.stream(
-        msg,
-        {"configurable": {"thread_id": memory_id}},
-        stream_mode="values",
-    )
-    for event in events:
-        if len(event["messages"]) > 0:
-            event["messages"][-1].pretty_print()
+        msg = {
+            "role": "user",
+            "conent": "这是本次一对一辅导所要讲的习题: 师徒两人装配自行车，师傅每天装配32辆，徒弟每天比师傅少装配8辆．经过多少天师傅比徒弟多装配56辆？",
+        }
+
+        events = graph.stream(
+            msg,
+            {"configurable": {"thread_id": memory_id}},
+            stream_mode="values",
+        )
+        for event in events:
+            if len(event["messages"]) > 0:
+                event["messages"][-1].pretty_print()
+
+    asyncio.run(main())
