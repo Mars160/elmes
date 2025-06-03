@@ -7,8 +7,8 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 
 import sqlite3
 
-from entity import AgentConfig
-from router import *  # noqa: F403
+from elmes.entity import AgentConfig
+from elmes.router import *  # noqa: F403
 
 
 def add_node_to_graph(graph: StateGraph, node_id: str, node_instance: Any) -> None:
@@ -60,8 +60,8 @@ def apply_agent_direction_from_dict(
 
 
 if __name__ == "__main__":
-    from elmes.utils import parse_yaml
     from pathlib import Path
+    from elmes.utils import parse_yaml
     from elmes.model import init_model_map_from_dict
     from elmes.agent import init_agent_map_from_dict
     # from langchain.globals import set_debug
@@ -69,12 +69,12 @@ if __name__ == "__main__":
     # set_debug(True)
 
     models = parse_yaml(
-        Path(__file__).parent.parent / "guided_teaching" / "models.yaml"
+        Path(__file__).parent.parent.parent / "guided_teaching" / "models.yaml"
     )["models"]
     model_map = init_model_map_from_dict(models)
 
     agents = parse_yaml(
-        Path(__file__).parent.parent / "guided_teaching" / "agents.yaml"
+        Path(__file__).parent.parent.parent / "guided_teaching" / "agents.yaml"
     )["agents"]
     agent_map = init_agent_map_from_dict(
         agents,
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     )
 
     directions = parse_yaml(
-        Path(__file__).parent.parent / "guided_teaching" / "directions.yaml"
+        Path(__file__).parent.parent.parent / "guided_teaching" / "directions.yaml"
     )
     graph, memory_id = apply_agent_direction_from_dict(directions, agent_map)
     # print(graph.get_graph().draw_mermaid())

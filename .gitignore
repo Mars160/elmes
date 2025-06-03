@@ -21,6 +21,7 @@ directions.yaml
 models.yaml
 start_prompt.yaml
 tasks.yaml
+globals.yaml
 
 tests/
 

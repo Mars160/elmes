@@ -6,7 +6,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 from typing import Any, Dict, List, Union, Callable, Optional, Tuple
 from entity import AgentConfig
-from utils import replace_prompt
+from elmes.utils import replace_prompt
 
 
 def _init_agent_from_dict(
@@ -76,12 +76,12 @@ if __name__ == "__main__":
     from elmes.model import init_model_map_from_dict
 
     models = parse_yaml(
-        Path(__file__).parent.parent / "guided_teaching" / "models.yaml"
+        Path(__file__).parent.parent.parent / "guided_teaching" / "models.yaml"
     )["models"]
     model_map = init_model_map_from_dict(models)
 
     agents = parse_yaml(
-        Path(__file__).parent.parent / "guided_teaching" / "agents.yaml"
+        Path(__file__).parent.parent.parent / "guided_teaching" / "agents.yaml"
     )["agents"]
     b = init_agent_map_from_dict(
         agents, model_map, {"image": "西瓜", "question": "菠萝"}

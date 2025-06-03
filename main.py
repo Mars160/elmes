@@ -1,5 +1,5 @@
 import yaml
-from elmes.utils import extract
+from src.elmes.utils import extract
 from pathlib import Path
 from typing import Dict, Any
 

@@ -19,15 +19,15 @@ def replace_prompt(
     result = []
     if len(prompt) > 0:
         for p in prompt:
-            if isinstance(p, Prompt):
-                for k, v in prompt_map.items():
-                    p.content = p.content.replace("{" + k + "}", v)
-                result.append(p)
-            elif isinstance(p, Dict):
+            if isinstance(p, Dict):
                 r = {"role": p["role"]}
                 for k, v in prompt_map.items():
                     r["content"] = p["content"].replace("{" + k + "}", v)
                 result.append(r)
+            else:  # isinstance(p, Prompt):
+                for k, v in prompt_map.items():
+                    p.content = p.content.replace("{" + k + "}", v)
+                result.append({"role": p.role, "content": p.content})
     return result
 
 
@@ -55,15 +55,17 @@ def extract(data: Dict[str, Any], key: str) -> List[Dict[str, Any]] | Dict[str, 
             cc: List[Dict[str, Any]] = []
             for c in combinations:
                 entry = dict(zip(keys, c))
-                entry["prompt"] = replace_prompt(start_prompt, entry)
-                cc.append(entry)
+                cc.append(
+                    {"variables": entry, "prompt": replace_prompt(start_prompt, entry)}
+                )
             return cc
         elif mode == "iter":
             result = []
             for c in data["tasks"]["content"]:
                 entry = c
-                entry["prompt"] = replace_prompt(start_prompt, entry)
-                result.append(entry)
+                result.append(
+                    {"variables": entry, "prompt": replace_prompt(start_prompt, entry)}
+                )
             return result
         else:
             raise NotImplementedError

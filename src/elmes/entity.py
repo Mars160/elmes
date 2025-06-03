@@ -9,6 +9,11 @@ class State(TypedDict):
     messages: Annotated[list, add_messages]
 
 
+# Global
+class GlobalConfig(BaseModel):
+    recursion_limit: int = 25
+
+
 # Model
 class ModelConfig(BaseModel):
     api_base: Optional[str]
