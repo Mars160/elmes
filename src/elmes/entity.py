@@ -51,3 +51,9 @@ class AgentConfig(BaseModel):
 class DirectionConfig(BaseModel):
     from_: str
     to: str
+
+
+# Task
+class TaskConfig(BaseModel):
+    start_prompt: List[Prompt]
+    variables: List[Dict[str, str]] = []
