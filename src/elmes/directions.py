@@ -4,9 +4,9 @@ from uuid import uuid4
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt.chat_agent_executor import AgentState
-from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
-import sqlite3
+import aiosqlite
 
 from elmes.entity import AgentConfig
 from elmes.router import *  # noqa: F403
@@ -51,21 +51,26 @@ async def apply_agent_direction_from_dict(
             if not pregel_instance or not agent_config:
                 raise ValueError(f"Invalid configuration for {end_node}.")
         graph.add_edge(start_node, end_node)
-    # conn = aiosqlite.connect(f"{memory_id}.db", check_same_thread=False)
-    conn = sqlite3.connect(f"{memory_id}.db", check_same_thread=False)
+    CONFIG.globals.memory.path.mkdir(parents=True, exist_ok=True)
+    path = CONFIG.globals.memory.path / f"{memory_id}.db"
+    # conn = sqlite3.connect(f"{memory_id}.db", check_same_thread=False)
     if task is not None:
-        cursor = conn.cursor()
-        # 创建一个名为task的表格，用于存储task里的key-value
-        sql = "create table task (key TEXT, value TEXT)"
-        cursor.execute(sql)
-        sql = "insert into task (key, value) values (?, ?)"
-        for key, value in task.items():
-            cursor.execute(sql, (key, value))
-            conn.commit()
-        cursor.close()
-    memory = SqliteSaver(conn)
+        async with aiosqlite.connect(path) as conn:
+            sql = "create table task (key TEXT, value TEXT)"
+            await conn.execute(sql)
+            sql = "insert into task (key, value) values (?, ?)"
+            for key, value in task.items():
+                await conn.execute(sql, (key, value))
+            await conn.commit()
+        # await conn.close()
+    conn = aiosqlite.connect(path, check_same_thread=False)
+    CONFIG.context.conns.append(conn)
+
+    memory = AsyncSqliteSaver(conn)
     return graph.compile(checkpointer=memory), memory_id
 
+
+apply_agent_direction = apply_agent_direction_from_dict
 
 if __name__ == "__main__":
     from elmes.model import init_model_map_from_dict

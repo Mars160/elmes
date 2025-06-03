@@ -4,7 +4,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import AIMessage, HumanMessage
 
-from typing import Any, Dict, List, Callable, Optional, Tuple
+from typing import Any, Dict, List, Callable, Optional, Tuple, Awaitable
 
 from elmes.entity import AgentConfig
 from elmes.utils import replace_prompt
@@ -16,14 +16,12 @@ def _init_agent_from_dict(
     model_map: Dict[str, BaseChatModel],
     agent_name: str,
     dynamic_prompt_map: Optional[Dict[str, str]] = None,
-) -> Callable[..., Dict[str, List[Any]]]:
+) -> Callable[..., Awaitable[Dict[str, List[Any]]]]:
     if dynamic_prompt_map is not None:
         ac.prompt = replace_prompt(ac.prompt, dynamic_prompt_map)  # type: ignore
     m = model_map[ac.model]
 
-    def chatbot(state: AgentState) -> Dict[str, List[Any]]:
-        # if len(state["messages"]) == 0:
-        #     return {"messages": ac.prompt + [m.invoke(state["messages"])]}
+    async def chatbot(state: AgentState) -> Dict[str, List[Any]]:
         if state["messages"] == []:
             n_m = ac.prompt
         else:
@@ -36,7 +34,7 @@ def _init_agent_from_dict(
                     item = HumanMessage(content=item.content, type="human")
                 n_m.append(item)
             n_m = ac.prompt + n_m
-        r = m.invoke(n_m)  # type: ignore
+        r = await m.ainvoke(n_m)  # type: ignore
         r.name = agent_name
         return {"messages": [r]}
 
@@ -64,3 +62,6 @@ def init_agent_map_from_dict(
         graph.add_edge("agent", END)
         result[k] = (graph.compile(checkpointer=memory), ac)
     return result, dynamic_prompt_map
+
+
+init_agent_map = init_agent_map_from_dict

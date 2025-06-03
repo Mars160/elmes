@@ -32,6 +32,8 @@ def init_model_map_from_dict() -> Dict[str, BaseChatModel]:
     return result
 
 
+init_model_map = init_model_map_from_dict
+
 if __name__ == "__main__":
     a = init_model_map_from_dict()
     print(a)

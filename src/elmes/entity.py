@@ -1,7 +1,9 @@
 from typing import Dict, Any, Optional, List, Annotated
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing_extensions import TypedDict
 from langgraph.graph.message import add_messages
+from pathlib import Path
+from aiosqlite import Connection
 
 
 # Common
@@ -9,9 +11,15 @@ class State(TypedDict):
     messages: Annotated[list, add_messages]
 
 
+# Memory
+class Memory(BaseModel):
+    path: Path = Path(".")
+
+
 # Global
 class GlobalConfig(BaseModel):
     recursion_limit: int = 25
+    memory: Memory = Memory()
 
 
 # Model
@@ -53,6 +61,12 @@ class TaskConfig(BaseModel):
     variables: List[Dict[str, str]] = []
 
 
+# Elmes Context
+class ElmesContext(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    conns: List[Connection] = []
+
+
 # Elmes
 class ElmesConfig(BaseModel):
     globals: GlobalConfig
@@ -60,3 +74,5 @@ class ElmesConfig(BaseModel):
     agents: Dict[str, AgentConfig]
     directions: List[str]
     tasks: TaskConfig
+
+    context: ElmesContext = ElmesContext(conns=[])

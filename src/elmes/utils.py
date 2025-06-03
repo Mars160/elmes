@@ -13,22 +13,37 @@ def parse_yaml(path: Path) -> Dict[str, Any]:  # type: ignore
             return d
 
 
+PromptType = Union[Dict[str, str], Prompt]
+
+
 def replace_prompt(
-    prompt: Union[List[Dict[str, str]], List[Prompt]], prompt_map: Dict[str, str]
+    prompt: Union[List[PromptType], PromptType], prompt_map: Dict[str, str]
 ) -> Union[List[Dict[str, str]], List[Prompt]]:
     result = []
-    if len(prompt) > 0:
-        for p in prompt:
-            p = deepcopy(p)  # deep copy to avoid modifying the original
-            if isinstance(p, Dict):
-                r = {"role": p["role"]}
-                for k, v in prompt_map.items():
-                    r["content"] = p["content"].replace("{" + k + "}", v)
-                result.append(r)
-            else:  # isinstance(p, Prompt):
-                for k, v in prompt_map.items():
-                    p.content = p.content.replace("{" + k + "}", v)
-                result.append({"role": p.role, "content": p.content})
+    if isinstance(prompt, List):
+        if len(prompt) > 0:
+            for p in prompt:
+                p = deepcopy(p)  # deep copy to avoid modifying the original
+                if isinstance(p, Dict):
+                    r = {"role": p["role"]}
+                    for k, v in prompt_map.items():
+                        r["content"] = p["content"].replace("{" + k + "}", v)
+                    result.append(r)
+                else:  # isinstance(p, Prompt):
+                    for k, v in prompt_map.items():
+                        p.content = p.content.replace("{" + k + "}", v)
+                    result.append({"role": p.role, "content": p.content})
+    else:
+        p = deepcopy(prompt)
+        if isinstance(p, Dict):
+            r = {"role": p["role"]}
+            for k, v in prompt_map.items():
+                r["content"] = p["content"].replace("{" + k + "}", v)
+            result.append(r)
+        else:
+            for k, v in prompt_map.items():
+                p.content = p.content.replace("{" + k + "}", v)
+            result.append({"role": p.role, "content": p.content})
     return result
 
 
