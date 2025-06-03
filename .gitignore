@@ -17,7 +17,7 @@ config/*_backend.yaml
 config/agents/*.yaml
 
 outputs/
-
+guided_teaching/
 tests/
 
 *.db

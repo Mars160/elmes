@@ -21,15 +21,13 @@ def generate(config: str):
 @click.option(
     "--input-dir", default="inputs", help="Directory containing chat databases"
 )
-@click.option("--output-dir", default="outputs", help="Directory to save output")
-def export_json(input_dir: str, output_dir: str):
+def export_json(input_dir: str):
     input = Path(input_dir)
-    output = Path(output_dir)
     if not input.exists():
         raise ValueError(f"Input directory {input} Not Exists!")
     elif not input.is_dir():
         raise ValueError(f"{input} is not a directory.")
-    output.mkdir(parents=True, exist_ok=True)
+    output = input
 
     dbfiles = []
     files = input.iterdir()
