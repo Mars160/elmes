@@ -22,7 +22,7 @@ def generate(config: str):
     "--input-dir", default="inputs", help="Directory containing chat databases"
 )
 @click.option("--output-dir", default="outputs", help="Directory to save output")
-def export(input_dir: str, output_dir: str):
+def export_json(input_dir: str, output_dir: str):
     input = Path(input_dir)
     output = Path(output_dir)
     if not input.exists():
@@ -57,9 +57,17 @@ def export(input_dir: str, output_dir: str):
         for m in checkpoint.get("channel_values")["messages"]:
             messages.append({"role": m.name, "content": m.content})
 
+        sql = "select key, value from task"
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        obj = {"task": {}, "messages": messages}
+
+        for key, value in results:
+            obj["task"][key] = value
+
         output_path = output / f"{path.stem}.json"
         with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(messages, f, ensure_ascii=False, indent=4)
+            json.dump(obj, f, ensure_ascii=False, indent=4)
 
     tasks = []
     for dbfile in dbfiles:
@@ -78,4 +86,4 @@ def main():
 
 
 main.add_command(generate)
-main.add_command(export)
+main.add_command(export_json)
