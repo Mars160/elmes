@@ -16,12 +16,7 @@ wheels/
 config/*_backend.yaml
 config/agents/*.yaml
 
-agents.yaml
-directions.yaml
-models.yaml
-start_prompt.yaml
-tasks.yaml
-globals.yaml
+outputs/
 
 tests/
 
