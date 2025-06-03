@@ -47,13 +47,16 @@ class AgentConfig(BaseModel):
     checkpointer: Optional[Any] = None
 
 
-# Direction
-class DirectionConfig(BaseModel):
-    from_: str
-    to: str
-
-
 # Task
 class TaskConfig(BaseModel):
-    start_prompt: List[Prompt]
+    start_prompt: Prompt
     variables: List[Dict[str, str]] = []
+
+
+# Elmes
+class ElmesConfig(BaseModel):
+    globals: GlobalConfig
+    models: Dict[str, ModelConfig]
+    agents: Dict[str, AgentConfig]
+    directions: List[str]
+    tasks: TaskConfig

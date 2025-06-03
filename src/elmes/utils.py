@@ -56,13 +56,25 @@ def extract(data: Dict[str, Any], key: str) -> List[Dict[str, Any]] | Dict[str, 
             for c in combinations:
                 entry = dict(zip(keys, c))
                 cc.append(entry)
-            return {"start_prompt": start_prompt, "variables": cc}
+            return {
+                "start_prompt": {
+                    "role": start_prompt["role"],
+                    "content": start_prompt["content"],
+                },
+                "variables": cc,
+            }
         elif mode == "iter":
             result = []
             for c in data["tasks"]["content"]:
                 entry = c
                 result.append(entry)
-            return {"start_prompt": start_prompt, "variables": result}
+            return {
+                "start_prompt": {
+                    "role": start_prompt["role"],
+                    "content": start_prompt["content"],
+                },
+                "variables": result,
+            }
         else:
             raise NotImplementedError
     else:
