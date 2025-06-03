@@ -4,12 +4,10 @@ from langchain.chat_models.base import BaseChatModel
 
 
 from elmes.entity import ModelConfig
+from elmes.config import CONFIG
 
 
-def init_chat_model_from_dict(
-    cfg: Dict[str, Union[str, Dict[str, str]]],
-) -> BaseChatModel:
-    mc = ModelConfig(**cfg)  # type: ignore
+def init_chat_model_from_dict(mc: ModelConfig) -> BaseChatModel:
     if mc.kargs is not None:
         llm = init_chat_model(
             model=f"{mc.type}:{mc.model}",
@@ -27,9 +25,8 @@ def init_chat_model_from_dict(
 
 
 def init_model_map_from_dict(cfg: Dict[str, Any]) -> Dict[str, BaseChatModel]:
+    cfg = CONFIG.models
     result = {}
-    if "models" in cfg:
-        cfg = cfg["models"]
     for k, v in cfg.items():
         result[k] = init_chat_model_from_dict(v)
     return result

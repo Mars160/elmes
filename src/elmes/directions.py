@@ -3,12 +3,13 @@ from uuid import uuid4
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt.chat_agent_executor import AgentState
-from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint.memory import InMemorySaver
 
 import sqlite3
 
 from elmes.entity import AgentConfig
 from elmes.router import *  # noqa: F403
+from elmes.config import CONFIG
 
 
 def add_node_to_graph(graph: StateGraph, node_id: str, node_instance: Any) -> None:
@@ -19,18 +20,12 @@ def add_node_to_graph(graph: StateGraph, node_id: str, node_instance: Any) -> No
 
 
 def apply_agent_direction_from_dict(
-    cfg: Union[Dict[str, Any], Sequence[str]],
     agent_map: Dict[str, Tuple[CompiledStateGraph, AgentConfig]],
     memory_id: Optional[str] = None,
 ) -> Tuple[CompiledStateGraph, str]:
     if memory_id is None:
         memory_id = str(uuid4())
-    if isinstance(cfg, dict):
-        directions = cfg.get("directions")
-        if not directions:
-            raise ValueError("No 'directions' provided in the configuration.")
-    else:
-        directions = cfg
+    directions = CONFIG.directions
     graph = StateGraph(AgentState)
     for node_id, node_instance in agent_map.items():
         graph.add_node(node_id, node_instance[0])
@@ -54,8 +49,7 @@ def apply_agent_direction_from_dict(
             if not pregel_instance or not agent_config:
                 raise ValueError(f"Invalid configuration for {end_node}.")
         graph.add_edge(start_node, end_node)
-    conn = sqlite3.connect("agent_graph.db", check_same_thread=False)
-    memory = SqliteSaver(conn)
+    memory = InMemorySaver()
     return graph.compile(checkpointer=memory), memory_id
 
 
@@ -77,7 +71,6 @@ if __name__ == "__main__":
         Path(__file__).parent.parent.parent / "guided_teaching" / "agents.yaml"
     )["agents"]
     agent_map = init_agent_map_from_dict(
-        agents,
         model_map,
         {
             "image": "无法独立完成最基础的计算，阅读只能逐字识别没有理解，学科知识一无所知。课堂上经常发呆或睡觉，作业本脏乱不堪，老师批评时表现出完全的冷漠。",
@@ -88,7 +81,7 @@ if __name__ == "__main__":
     directions = parse_yaml(
         Path(__file__).parent.parent.parent / "guided_teaching" / "directions.yaml"
     )
-    graph, memory_id = apply_agent_direction_from_dict(directions, agent_map)
+    graph, memory_id = apply_agent_direction_from_dict(agent_map)
     # print(graph.get_graph().draw_mermaid())
 
     msg = {

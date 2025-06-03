@@ -19,6 +19,7 @@ def replace_prompt(
     result = []
     if len(prompt) > 0:
         for p in prompt:
+            p = deepcopy(p)  # deep copy to avoid modifying the original
             if isinstance(p, Dict):
                 r = {"role": p["role"]}
                 for k, v in prompt_map.items():

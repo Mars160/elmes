@@ -17,5 +17,4 @@ for k in data.keys():
     c = extract(data, k)
     n_data[k] = c
 
-print("read")
 CONFIG = ElmesConfig(**n_data)

@@ -5,20 +5,18 @@ from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import AIMessage, HumanMessage
 
 from typing import Any, Dict, List, Union, Callable, Optional, Tuple
+
 from elmes.entity import AgentConfig
 from elmes.utils import replace_prompt
+from elmes.config import CONFIG
 
 
 def _init_agent_from_dict(
-    cfg: Union[Dict[str, Union[str, List[Dict[str, str]]]], AgentConfig],
+    ac: AgentConfig,
     model_map: Dict[str, BaseChatModel],
     agent_name: str,
     dynamic_prompt_map: Optional[Dict[str, str]] = None,
 ) -> Callable[..., Dict[str, List[Any]]]:
-    if type(cfg) is not AgentConfig:
-        ac = AgentConfig(**cfg)  # type: ignore
-    else:
-        ac = cfg
     if dynamic_prompt_map is not None:
         ac.prompt = replace_prompt(ac.prompt, dynamic_prompt_map)  # type: ignore
     m = model_map[ac.model]
@@ -46,15 +44,13 @@ def _init_agent_from_dict(
 
 
 def init_agent_map_from_dict(
-    cfg: Dict[str, Any],
     model_map: Dict[str, BaseChatModel],
     dynamic_prompt_map: Optional[Dict[str, str]] = None,
 ) -> Dict[str, Tuple[CompiledStateGraph, AgentConfig]]:
     result = {}
-    if "agents" in cfg:
-        cfg = cfg["agents"]
-    for k, v in cfg.items():
-        ac = AgentConfig(**v)
+    acs = CONFIG.agents
+    for k, v in acs.items():
+        ac = v
         if ac.memory.enable:
             # conn = sqlite3.connect(f"{k}_checkpoint.sqlite", check_same_thread=False)
             # memory = SqliteSaver(conn)
