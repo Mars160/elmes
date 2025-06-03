@@ -5,7 +5,7 @@ from typing import Dict, Any
 
 import yaml
 
-CONFIG = None
+CONFIG: ElmesConfig | None = None
 
 
 def load_conf(path: Path):
@@ -24,3 +24,9 @@ def load_conf(path: Path):
 
 
 load_conf(Path(__file__).parent.parent.parent / "guided_teaching.yaml")
+
+if __name__ == "__main__":
+    # CONFIG = ElmesConfig()
+    format = CONFIG.evaluation.format_to_pydantic()
+    for name, field in format.model_json_schema().items():
+        print(name, field)  # type:
