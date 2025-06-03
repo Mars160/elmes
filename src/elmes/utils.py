@@ -55,19 +55,19 @@ def extract(data: Dict[str, Any], key: str) -> List[Dict[str, Any]] | Dict[str, 
             cc: List[Dict[str, Any]] = []
             for c in combinations:
                 entry = dict(zip(keys, c))
-                cc.append(
-                    {"variables": entry, "prompt": replace_prompt(start_prompt, entry)}
-                )
-            return cc
+                cc.append(entry)
+            return {"start_prompt": start_prompt, "variables": cc}
         elif mode == "iter":
             result = []
             for c in data["tasks"]["content"]:
                 entry = c
-                result.append(
-                    {"variables": entry, "prompt": replace_prompt(start_prompt, entry)}
-                )
-            return result
+                result.append(entry)
+            return {"start_prompt": start_prompt, "variables": result}
         else:
             raise NotImplementedError
     else:
         return data[key]
+
+
+def prompt_to_dict(prompt: Prompt) -> Dict[str, Any]:
+    return {"role": prompt.role, "content": prompt.content}
