@@ -13,8 +13,7 @@ wheels/
 /evaluation_result*/
 /results*/
 
-config/*_backend.yaml
-config/agents/*.yaml
+*.yaml
 
 outputs/
 guided_teaching/

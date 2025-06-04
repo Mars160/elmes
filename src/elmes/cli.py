@@ -113,6 +113,7 @@ def eval(config: Path):
             json.dump(js, f, ensure_ascii=False, indent=4)
 
     async def main():
+        assert CONFIG.evaluation
         model = init_chat_model_from_dict(CONFIG.models[CONFIG.evaluation.model])
 
         to_eval_files = list(input_dir.glob("*.json"))

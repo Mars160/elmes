@@ -2,6 +2,7 @@ import json
 import re
 from typing import Dict, Any, Literal, Optional, List, Annotated, Tuple
 from click import prompt
+import concurrent
 from pydantic import BaseModel, ConfigDict, Field, create_model
 from typing_extensions import TypedDict
 from langgraph.graph.message import add_messages
@@ -24,6 +25,12 @@ class GlobalConfig(BaseModel):
     concurrency: int = 8
     recursion_limit: int = 25
     memory: Memory = Memory()
+    print_each_step: bool = False
+
+    def model_post_init(self, context: Any) -> None:
+        if self.print_each_step:
+            assert self.concurrency != 1, "每步打印和并发不能同时开启！"
+        return super().model_post_init(context)
 
 
 # Model
@@ -193,6 +200,6 @@ class ElmesConfig(BaseModel):
     agents: Dict[str, AgentConfig]
     directions: List[str]
     tasks: TaskConfig
-    evaluation: EvalConfig
+    evaluation: Optional[EvalConfig] = None
 
     context: ElmesContext = ElmesContext(conns=[])

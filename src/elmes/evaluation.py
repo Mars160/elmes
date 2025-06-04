@@ -37,6 +37,7 @@ def generate_evaluation_tool() -> BaseTool:
 async def evaluate(
     model: BaseChatModel, exported_result: ExportFormat
 ) -> Dict[str, Any]:
+    assert CONFIG.evaluation
     system_prompt, other_prompt = CONFIG.evaluation.get_prompts()
     system_prompt = exported_result.replace_template(system_prompt)
     ops = []
