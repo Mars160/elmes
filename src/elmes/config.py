@@ -9,6 +9,8 @@ CONFIG: ElmesConfig
 
 
 def load_conf(path: Path):
+    if isinstance(path, str):
+        path = Path(path)
     if not path.exists():
         return
     global CONFIG

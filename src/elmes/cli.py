@@ -2,6 +2,8 @@ import click
 
 from pathlib import Path
 
+from langsmith import evaluate
+
 
 @click.command("generate")
 @click.option("--config", default="config.yaml", help="Path to the configuration file.")
@@ -78,6 +80,54 @@ def export_json(input_dir: str):
     arun()
 
 
+@click.command()
+@click.option(
+    "--input-dir",
+    type=click.Path(exists=True),
+    required=True,
+    help="Evaluation input directory",
+)
+@click.option(
+    "--config",
+    type=click.Path(exists=True),
+    required=True,
+    help="Path to the configuration file",
+)
+def eval(input_dir: Path, config: Path):
+    import asyncio
+    from elmes.evaluation import evaluate
+    from elmes.model import init_chat_model_from_dict
+    from elmes.config import CONFIG, load_conf
+    from elmes.entity import ExportFormat
+    from tqdm.asyncio import tqdm
+    import json
+
+    load_conf(config)
+
+    input_dir = Path(input_dir)
+
+    eval_path = input_dir / "eval"
+    eval_path.mkdir(exist_ok=True)
+
+    async def eval_task(model, file: Path):
+        ef = ExportFormat.from_json_file(file)
+        js = await evaluate(model, ef)
+        with open(eval_path / file.name, "w", encoding="utf8") as f:
+            json.dump(js, f, ensure_ascii=False, indent=4)
+
+    async def main():
+        model = init_chat_model_from_dict(CONFIG.models[CONFIG.evaluation.model])
+
+        to_eval_files = list(input_dir.glob("*.json"))
+        eval_tasks = []
+        for file in to_eval_files:
+            eval_tasks.append(eval_task(model, file))
+
+        await tqdm.gather(*eval_tasks)
+
+    asyncio.run(main())
+
+
 @click.group()
 def main():
     pass
@@ -85,3 +135,4 @@ def main():
 
 main.add_command(generate)
 main.add_command(export_json)
+main.add_command(eval)

@@ -106,7 +106,7 @@ if __name__ == "__main__":
         # set_debug(True)
 
         ef = ExportFormat.from_json_file(
-            "/Users/mars160/elmes/guided_teaching/5e78c0e9-e35d-4404-b108-79de4d826628.json"
+            "/Users/mars160/elmes/guided_teaching/4f699a38-33fe-4cd6-8013-06e191e249ab.json"
         )
 
         model = init_chat_model_from_dict(CONFIG.models["4o_teacher"])
