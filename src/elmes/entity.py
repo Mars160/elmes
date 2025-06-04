@@ -138,6 +138,12 @@ class EvalConfig(BaseModel):
     model: str
     prompt: List[Prompt]
     format: List[FormatField]
+    format_mode: Literal["tool", "prompt"] = "tool"
+
+    def format_to_json_schema(self) -> str:
+        model = self.format_to_pydantic()
+        json_schema = model.model_json_schema()
+        return json.dumps(json_schema, ensure_ascii=False)
 
     def get_prompts(self) -> Tuple[str, List[Prompt]]:
         """获取系统提示和其他提示词"""
