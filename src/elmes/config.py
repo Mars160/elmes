@@ -9,6 +9,8 @@ CONFIG: ElmesConfig
 
 
 def load_conf(path: Path):
+    if not path.exists():
+        return
     global CONFIG
     data: Dict[str, Dict[str, Any]] = {}
     with open(path, "r") as f:
