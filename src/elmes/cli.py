@@ -2,19 +2,17 @@ import click
 
 from pathlib import Path
 
-from langsmith import evaluate
-
 
 @click.command("generate")
 @click.option("--config", default="config.yaml", help="Path to the configuration file.")
 def generate(config: str):
     from elmes.config import load_conf
-    from elmes.run import run
-
-    import asyncio
 
     path = Path(config)
     load_conf(path)
+
+    from elmes.run import run
+    import asyncio
 
     asyncio.run(run())
 
@@ -82,27 +80,26 @@ def export_json(input_dir: str):
 
 @click.command()
 @click.option(
-    "--input-dir",
-    type=click.Path(exists=True),
-    required=True,
-    help="Evaluation input directory",
-)
-@click.option(
     "--config",
     type=click.Path(exists=True),
     required=True,
     help="Path to the configuration file",
 )
-def eval(input_dir: Path, config: Path):
+def eval(config: Path):
+    from elmes.config import load_conf
+
+    load_conf(config)
+
+    from elmes.config import CONFIG
+
+    input_dir = CONFIG.globals.memory.path
     import asyncio
     from elmes.evaluation import evaluate
     from elmes.model import init_chat_model_from_dict
-    from elmes.config import CONFIG, load_conf
+
     from elmes.entity import ExportFormat
     from tqdm.asyncio import tqdm
     import json
-
-    load_conf(config)
 
     input_dir = Path(input_dir)
 
