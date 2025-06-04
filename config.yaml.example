@@ -4,6 +4,8 @@ globals:
   concurrency: 16
   # 模型调用限制次数
   recursion_limit: 50
+
+  # 还有一些未实装字段：
   # 每步都打印步骤信息（默认关闭）
   print_each_step: False
   
