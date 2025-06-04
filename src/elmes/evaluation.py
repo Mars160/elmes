@@ -34,7 +34,9 @@ def generate_evaluation_tool() -> BaseTool:
     return save_to_db  # type: ignore
 
 
-def evaluate(model: BaseChatModel, exported_result: ExportFormat) -> Dict[str, Any]:
+async def evaluate(
+    model: BaseChatModel, exported_result: ExportFormat
+) -> Dict[str, Any]:
     system_prompt, other_prompt = CONFIG.evaluation.get_prompts()
     system_prompt = exported_result.replace_template(system_prompt)
     ops = []
@@ -84,7 +86,10 @@ def evaluate(model: BaseChatModel, exported_result: ExportFormat) -> Dict[str, A
         # 正则表达式匹配<START OUTPUT>和<END OUTPUT>
         match = re.findall(r"<START OUTPUT>(.*)<END OUTPUT>", response, re.DOTALL)
         if len(match) > 0:
-            return json.loads(match[-1])
+            text = match[-1]
+            # 如果text被```包围，去掉
+            text = text.strip("```").strip("json")
+            return json.loads(text)
         else:
             raise ValueError("Output does not contain <START OUTPUT> and <END OUTPUT>")
     else:
@@ -92,15 +97,20 @@ def evaluate(model: BaseChatModel, exported_result: ExportFormat) -> Dict[str, A
 
 
 if __name__ == "__main__":
-    from elmes.model import init_chat_model_from_dict
-    from langchain.globals import set_debug
+    import asyncio
 
-    set_debug(True)
+    async def main():
+        from elmes.model import init_chat_model_from_dict
+        # from langchain.globals import set_debug
 
-    ef = ExportFormat.from_json_file(
-        "/Users/mars160/elmes/guided_teaching/5e78c0e9-e35d-4404-b108-79de4d826628.json"
-    )
+        # set_debug(True)
 
-    model = init_chat_model_from_dict(CONFIG.models["4o_teacher"])
-    a = evaluate(model, ef)
-    print(a)
+        ef = ExportFormat.from_json_file(
+            "/Users/mars160/elmes/guided_teaching/5e78c0e9-e35d-4404-b108-79de4d826628.json"
+        )
+
+        model = init_chat_model_from_dict(CONFIG.models["4o_teacher"])
+        a = await evaluate(model, ef)
+        print(a)
+
+    asyncio.run(main())
