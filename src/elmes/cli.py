@@ -53,7 +53,16 @@ def export_json(input_dir: str):
         checkpoint: Checkpoint = jps.loads_typed(("msgpack", c))
         messages = []
         for m in checkpoint.get("channel_values")["messages"]:
-            messages.append({"role": m.name, "content": m.content})
+            if "</think>" in m.content:
+                content_split = m.content.split("</think>")
+                reasoning = content_split[0].strip()
+                response = content_split[1].strip()
+            else:
+                reasoning = ""
+                response = m.content.strip()
+            messages.append(
+                {"role": m.name, "content": response, "reasoning": reasoning}
+            )
 
         sql = "select key, value from task"
         cursor.execute(sql)
