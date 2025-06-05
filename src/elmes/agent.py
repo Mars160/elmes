@@ -33,6 +33,8 @@ def _init_agent_from_dict(
                 else:
                     item = HumanMessage(content=item.content, type="human")
                 n_m.append(item)
+            if len(n_m) > ac.memory.keep_turns * 2 + 1:
+                n_m = n_m[-ac.memory.keep_turns * 2 - 1 :]
             n_m = ac.prompt + n_m
         r = await m.ainvoke(n_m)  # type: ignore
         r.name = agent_name

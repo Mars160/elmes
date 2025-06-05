@@ -53,7 +53,8 @@ class SwitchConfig(BaseModel):
 class AgentMemoryConfig(BaseModel):
     enable: bool = True
     id: Optional[str] = None
-    when_switch: SwitchConfig = SwitchConfig()
+    keep_turns: int = 3
+    # when_switch: SwitchConfig = SwitchConfig()
 
 
 class AgentConfig(BaseModel):
