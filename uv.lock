@@ -272,6 +272,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "requests" },
     { name = "seaborn" },
+    { name = "tenacity" },
 ]
 
 [package.dev-dependencies]
@@ -295,6 +296,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "seaborn", specifier = ">=0.13.2" },
+    { name = "tenacity", specifier = ">=9.1.2" },
 ]
 
 [package.metadata.requires-dev]

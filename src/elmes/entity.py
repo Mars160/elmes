@@ -18,17 +18,18 @@ class Memory(BaseModel):
     path: Path = Path(".")
 
 
+# RetryConfig
+class RetryConfig(BaseModel):
+    attempt: int = 3
+    interval: int = 3
+
+
 # Global
 class GlobalConfig(BaseModel):
     concurrency: int = 8
     recursion_limit: int = 25
     memory: Memory = Memory()
-    print_each_step: bool = False
-
-    def model_post_init(self, context: Any) -> None:
-        if self.print_each_step:
-            assert self.concurrency != 1, "每步打印和并发不能同时开启！"
-        return super().model_post_init(context)
+    retry: RetryConfig = RetryConfig()
 
 
 # Model

@@ -4,11 +4,12 @@ globals:
   concurrency: 16
   # 模型调用限制次数
   recursion_limit: 50
-
-  # 还有一些未实装字段：
-  # 每步都打印步骤信息（默认关闭）
-  print_each_step: False
-  
+  # 重试（下面是默认）
+  retry:
+    # 重试次数
+    attempt: 3
+    # 重试间隔（秒）
+    interval: 3
 
 # 定义任务中需要用到的模型
 models:
@@ -44,12 +45,13 @@ agents:
     memory:
       enable: true # 是否启用记忆
       id: null # 记忆的id号，建议不填或留空，除非需要多次运行时保留记忆
+      # 调用时携带多少轮上下文对话，一个user一个assistant记作一轮
+      keep_turns: 3 # 默认3轮，即上方配置的prompt-[user-assistant-user-assistant-user-assistant]-user
   student:
     model: gemini_stu
     prompt:
       - role: system
         content: 你是一名{image}的学生,你的任务是学习掌握这节课老师所教的习题。
-    enable_memory: true
 
 # 信息传递方向
 directions:

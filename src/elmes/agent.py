@@ -5,6 +5,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import AIMessage, HumanMessage
 
 from typing import Any, Dict, List, Callable, Optional, Tuple, Awaitable
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 from elmes.entity import AgentConfig
 from elmes.utils import replace_prompt
@@ -21,6 +22,10 @@ def _init_agent_from_dict(
         ac.prompt = replace_prompt(ac.prompt, dynamic_prompt_map)  # type: ignore
     m = model_map[ac.model]
 
+    @retry(
+        stop=stop_after_attempt(CONFIG.globals.retry.attempt),
+        wait=wait_fixed(CONFIG.globals.retry.interval),
+    )
     async def chatbot(state: AgentState) -> Dict[str, List[Any]]:
         if state["messages"] == []:
             n_m = ac.prompt
