@@ -84,14 +84,14 @@ async def evaluate(
 
         a = agent.invoke({"messages": ops})
         response = a["messages"][-1].content
-        print(response)
+        # print(response)
         # 正则表达式匹配<START OUTPUT>和<END OUTPUT>
         match = re.findall(r"<START OUTPUT>(.*)<END OUTPUT>", response, re.DOTALL)
         if len(match) > 0:
             text = match[-1]
             # 如果text被```包围，去掉
             text = text.strip().strip("```").strip("json")
-            print(text, "#############")
+            # print(text, "#############")
             return json.loads(text)
         else:
             raise ValueError("Output does not contain <START OUTPUT> and <END OUTPUT>")

@@ -11,7 +11,7 @@ from langchain.globals import set_debug
 
 @click.command("generate")
 @click.option("--config", default="config.yaml", help="Path to the configuration file.")
-@click.option("--debug", default=False, help="Debug Mode")
+@click.option("--debug", default=False, help="Debug Mode", is_flag=True)
 def generate(config: str, debug: bool):
     set_debug(debug)
     from elmes.config import load_conf
@@ -29,7 +29,7 @@ def generate(config: str, debug: bool):
 @click.option(
     "--input-dir", default="inputs", help="Directory containing chat databases"
 )
-@click.option("--debug", default=False, help="Debug Mode")
+@click.option("--debug", default=False, help="Debug Mode", is_flag=True)
 def export_json(input_dir: str, debug: bool):
     set_debug(debug)
     input = Path(input_dir)
@@ -106,8 +106,9 @@ def export_json(input_dir: str, debug: bool):
     required=True,
     help="Path to the configuration file",
 )
-@click.option("--debug", default=False, help="Debug Mode")
-def eval(config: Path, debug: bool):
+@click.option("--debug", default=False, help="Debug Mode", is_flag=True)
+@click.option("--avg", default=True, help="计算各项平均及总平均值", is_flag=True)
+def eval(config: Path, debug: bool, avg: bool):
     set_debug(debug)
     from elmes.config import load_conf
 
@@ -123,6 +124,7 @@ def eval(config: Path, debug: bool):
     from elmes.entity import ExportFormat
     from tqdm.asyncio import tqdm
     import json
+    import math
 
     input_dir = Path(input_dir)
 
@@ -165,15 +167,55 @@ def eval(config: Path, debug: bool):
         for field in e:
             title.append(field)
 
+        if avg:
+            title.append("avg")
+
         csv_utf8.write(",".join(title) + "\n")
         csv_gbk.write(",".join(title) + "\n")
 
-        for task_id, eval in zip(task_ids, evals):
-            contents = [task_id]
-            for f, c in eval.items():
-                contents.append(f"{c}")
-            csv_utf8.write(",".join(contents) + "\n")
-            csv_gbk.write(",".join(contents) + "\n")
+        if avg:
+            row = len(task_ids) + 1
+            col = len(title) - 1
+
+            matrix = [[0.0] * col for _ in range(row)]
+
+            # 统计数据并计算每行平均值
+            for idx, (task_id, eval) in enumerate(zip(task_ids, evals)):
+                contents = [task_id]
+                for sub_idx, (f, c) in enumerate(eval.items()):
+                    v = float(c)
+                    matrix[idx][sub_idx] = v
+                    contents.append(f"{c}")
+                sum = 0
+                for i in matrix[idx][:-1]:
+                    sum += i
+                # 最后一列的数字 = 每列的和除以列数-1
+                matrix[idx][col - 1] = sum / (col - 1)
+                contents.append(f"{matrix[idx][col - 1]:.2f}")
+                csv_utf8.write(",".join(contents) + "\n")
+                csv_gbk.write(",".join(contents) + "\n")
+            # 计算每列的平均值
+            for col_idx in range(col):
+                # print(matrix)
+                sum = 0
+                # 计算每一列除去最后一个元素的和
+                for row_idx in range(row - 1):
+                    sum += matrix[row_idx][col_idx]
+                matrix[-1][col_idx] = sum / (row - 1)
+
+            write_str = ["%.2f" % i for i in matrix[-1]]
+            write_str.insert(0, "Avg")
+            # 写入最后一行的平均值
+            csv_utf8.write(",".join(write_str) + "\n")
+            csv_gbk.write(",".join(write_str) + "\n")
+        else:
+            for task_id, eval in zip(task_ids, evals):
+                contents = [task_id]
+                for f, c in eval.items():
+                    contents.append(f"{c}")
+                csv_utf8.write(",".join(contents) + "\n")
+                csv_gbk.write(",".join(contents) + "\n")
+
         csv_utf8.close()
         csv_gbk.close()
 
