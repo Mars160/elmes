@@ -1,3 +1,4 @@
+from email.policy import default
 import click
 
 from pathlib import Path
@@ -10,7 +11,9 @@ from langchain.globals import set_debug
 
 @click.command("generate")
 @click.option("--config", default="config.yaml", help="Path to the configuration file.")
-def generate(config: str):
+@click.option("--debug", default=False, help="Debug Mode")
+def generate(config: str, debug: bool):
+    set_debug(debug)
     from elmes.config import load_conf
 
     path = Path(config)
@@ -26,7 +29,9 @@ def generate(config: str):
 @click.option(
     "--input-dir", default="inputs", help="Directory containing chat databases"
 )
-def export_json(input_dir: str):
+@click.option("--debug", default=False, help="Debug Mode")
+def export_json(input_dir: str, debug: bool):
+    set_debug(debug)
     input = Path(input_dir)
     if not input.exists():
         raise ValueError(f"Input directory {input} Not Exists!")
@@ -58,7 +63,7 @@ def export_json(input_dir: str):
         checkpoint: Checkpoint = jps.loads_typed(("msgpack", c))
         messages = []
         for m in checkpoint.get("channel_values")["messages"]:
-            if m.name == None:
+            if m.name is None:
                 continue
             if "</think>" in m.content:
                 content_split = m.content.split("</think>")
@@ -101,7 +106,9 @@ def export_json(input_dir: str):
     required=True,
     help="Path to the configuration file",
 )
-def eval(config: Path):
+@click.option("--debug", default=False, help="Debug Mode")
+def eval(config: Path, debug: bool):
+    set_debug(debug)
     from elmes.config import load_conf
 
     load_conf(config)
