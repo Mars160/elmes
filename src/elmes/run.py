@@ -36,13 +36,14 @@ async def run(workers_num: int = CONFIG.globals.concurrency):
         async with sem:
             try:
                 await agent.ainvoke(
-                    prompt,
+                    {"messages": prompt},
                     {
                         "configurable": {"thread_id": "0"},
                         "recursion_limit": CONFIG.globals.recursion_limit,
                     },
                     stream_mode="values",
                 )
+                print(1)
             except GraphRecursionError:
                 print(
                     f"Recursion limit {CONFIG.globals.recursion_limit} reached for one task"
