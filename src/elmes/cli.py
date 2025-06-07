@@ -8,7 +8,7 @@ from langchain.globals import set_debug
 # set_debug(True)
 
 
-@click.command("generate")
+@click.command("generate", help="Generate conversions for all tasks")
 @click.option("--config", default="config.yaml", help="Path to the configuration file.")
 @click.option("--debug", default=False, help="Debug Mode", is_flag=True)
 def generate(config: str, debug: bool):
@@ -24,7 +24,7 @@ def generate(config: str, debug: bool):
     asyncio.run(run())
 
 
-@click.command()
+@click.command(help="Export chat databases to JSON format")
 @click.option(
     "--input-dir", default="inputs", help="Directory containing chat databases"
 )
@@ -98,7 +98,7 @@ def export_json(input_dir: str, debug: bool):
     arun()
 
 
-@click.command()
+@click.command(help="Evaluate the performance of a model on a dataset")
 @click.option(
     "--config",
     type=click.Path(exists=True),
@@ -106,7 +106,7 @@ def export_json(input_dir: str, debug: bool):
     help="Path to the configuration file",
 )
 @click.option("--debug", default=False, help="Debug Mode", is_flag=True)
-@click.option("--avg", default=True, help="计算各项平均及总平均值", is_flag=True)
+@click.option("--avg", default=True, help="Calculate the average score", is_flag=True)
 def eval(config: Path, debug: bool, avg: bool):
     set_debug(debug)
     from elmes.config import load_conf
@@ -220,6 +220,22 @@ def eval(config: Path, debug: bool, avg: bool):
     asyncio.run(main())
 
 
+@click.command(
+    help="Run the pipeline to generate, export JSON files, and evaluate the results."
+)
+@click.option(
+    "--config", type=click.Path(exists=True), help="Path to the configuration file"
+)
+@click.option("--debug", is_flag=True, help="Enable debug mode")
+def pipeline(config, debug=False):
+    set_debug(debug)
+    config_path = Path(config)
+
+    generate(config=config_path)
+    export_json(config=config_path.parent / config_path.stem)
+    eval(config=config_path.stem)
+
+
 @click.group()
 def main():
     pass
@@ -228,3 +244,4 @@ def main():
 main.add_command(generate)
 main.add_command(export_json)
 main.add_command(eval)
+main.add_command(pipeline)
