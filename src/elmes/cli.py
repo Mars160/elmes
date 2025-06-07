@@ -1,6 +1,11 @@
 import click
 
 from pathlib import Path
+from typing import Dict, Any
+
+from langchain.globals import set_debug
+
+# set_debug(True)
 
 
 @click.command("generate")
@@ -53,6 +58,8 @@ def export_json(input_dir: str):
         checkpoint: Checkpoint = jps.loads_typed(("msgpack", c))
         messages = []
         for m in checkpoint.get("channel_values")["messages"]:
+            if m.name == None:
+                continue
             if "</think>" in m.content:
                 content_split = m.content.split("</think>")
                 reasoning = content_split[0].strip()
@@ -115,22 +122,53 @@ def eval(config: Path):
     eval_path = input_dir / "eval"
     eval_path.mkdir(exist_ok=True)
 
-    async def eval_task(model, file: Path):
+    async def eval_task(model, file: Path) -> Dict[str, Any]:
         ef = ExportFormat.from_json_file(file)
-        js = await evaluate(model, ef)
-        with open(eval_path / file.name, "w", encoding="utf8") as f:
-            json.dump(js, f, ensure_ascii=False, indent=4)
+        try:
+            eval = await evaluate(model, ef)
+            with open(eval_path / file.name, "w", encoding="utf8") as f:
+                json.dump(eval, f, ensure_ascii=False, indent=4)
+            return eval
+        except:
+            print(f"Error evaluating {file}")
+            return {}
 
     async def main():
         assert CONFIG.evaluation
         model = init_chat_model_from_dict(CONFIG.models[CONFIG.evaluation.model])
 
         to_eval_files = list(input_dir.glob("*.json"))
+        task_ids = [file.stem for file in to_eval_files]
         eval_tasks = []
         for file in to_eval_files:
             eval_tasks.append(eval_task(model, file))
 
-        await tqdm.gather(*eval_tasks)
+        evals = await tqdm.gather(*eval_tasks)
+
+        csv_utf8 = open(eval_path / "result-utf8.csv", "w", encoding="utf-8")
+        csv_gbk = open(eval_path / "result-gbk.csv", "w", encoding="gbk")
+
+        title = ["task_id"]
+        # title = []
+        e = []
+        count = 0
+        while len(e) == 0 and count < len(evals):
+            e = list(evals[count].keys())
+            count += 1
+        for field in e:
+            title.append(field)
+
+        csv_utf8.write(",".join(title) + "\n")
+        csv_gbk.write(",".join(title) + "\n")
+
+        for task_id, eval in zip(task_ids, evals):
+            contents = [task_id]
+            for f, c in eval.items():
+                contents.append(f"{c}")
+            csv_utf8.write(",".join(contents) + "\n")
+            csv_gbk.write(",".join(contents) + "\n")
+        csv_utf8.close()
+        csv_gbk.close()
 
     asyncio.run(main())
 

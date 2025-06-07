@@ -43,7 +43,7 @@ class ModelConfig(BaseModel):
 
 # Agent
 class Prompt(BaseModel):
-    role: str
+    role: Optional[str]
     content: str
 
 
@@ -93,6 +93,8 @@ class ExportFormat(BaseModel):
         if function_call == "as_dialog()":
             strings = []
             for message in self.messages:
+                if message.role is None:
+                    continue
                 strings.append(f"{message.role}: {message.content}")
             return "\n".join(strings)
         else:
