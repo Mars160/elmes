@@ -1,4 +1,3 @@
-from email.policy import default
 import click
 
 from pathlib import Path
@@ -124,7 +123,6 @@ def eval(config: Path, debug: bool, avg: bool):
     from elmes.entity import ExportFormat
     from tqdm.asyncio import tqdm
     import json
-    import math
 
     input_dir = Path(input_dir)
 
@@ -138,7 +136,7 @@ def eval(config: Path, debug: bool, avg: bool):
             with open(eval_path / file.name, "w", encoding="utf8") as f:
                 json.dump(eval, f, ensure_ascii=False, indent=4)
             return eval
-        except:
+        except:  # noqa: E722
             print(f"Error evaluating {file}")
             return {}
 
