@@ -1,20 +1,23 @@
-# elmes - 教育语言模型评估系统
+# elmes - 教育场景评测系统
 
-**E**ducation **L**anguage **M**odel **E**valuation **S**ystem (elmes) 是一个 Python 框架，旨在为LLM不同场景下的各种任务提供代理编排和自动评估的功能。它采用模块化架构，基于 YAML 配置，可扩展的实体使得该框架适用于构建、配置和评估复杂的基于代理的工作流。系统采用现代 Python 编程实践，遵循 PEP 标准。
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+
+**E**ducation **L**anguage **M**odel **E**valuation **S**ystem (elmes) 是一个 Python 框架，旨在为LLM不同场景下的各种任务提供代理编排和自动评估的功能。它采用模块化架构，基于 YAML 配置，可扩展的实体使得该框架适用于构建、配置和评估复杂的基于代理的工作流。系统采用现代 Python 编程实践。
 
 ---
 
 ## 目录
 
 - [概述](#概述)
-- [安装](#安装)
+- [安装](#🔧 安装与配置)
 - [命令行接口](#命令行接口)
 - [核心组件](#核心组件)
   - [配置管理](#配置管理)
   - [实体定义](#实体定义)
   - [评估框架](#评估框架)
 - [扩展 elmes](#扩展-elmes)
-- [UML 类图](#uml-类图)
 ---
 
 ## 概述
@@ -26,14 +29,51 @@ elmes 使用户能够通过灵活的 YAML 配置系统配置、管理和评估 A
 - **模块化、可扩展的实体**：便于快速原型设计和新评估策略的实验。
 ---
 
-## 安装
+## 🔧 安装与配置
 
-elmes 需要 Python 3.10 或更高版本。
+### 环境要求
 
-推荐使用uv安装：
+- Python 3.10+
+- 支持OpenAI、Anthropic等主流AI模型
+- uv 包管理器（推荐）或 pip
+
+### 快速开始
+
+1. **克隆项目**
 ```bash
-uv pip install elmes
+git clone <repository-url>
+cd elmes
 ```
+
+2. **安装依赖**
+```bash
+# 使用 uv (推荐)
+uv sync
+
+# 或使用 pip
+pip install -e .
+```
+
+3. **配置教育场景**
+```bash
+cp config.yaml.example config.yaml
+```
+
+4. **设置AI模型**
+
+编辑 `config.yaml` 文件，配置您的AI模型：
+
+```yaml
+models:
+  math_teacher:
+    type: openai
+    api_key: your_openai_api_key
+    api_base: https://api.openai.com/v1
+    model: gpt-4o-mini
+    kargs:
+      temperature: 0.7
+```
+
 
 ---
 
@@ -63,20 +103,6 @@ elmes pipeline --config config.yaml --debug
 ---
 
 ## 核心组件
-
-### 配置管理
-
-配置加载由 `elmes.config` 管理。核心功能为：
-```python
-def load_conf(path: Path):
-    ...
-```
-
-特点：
-- 接受一个描述所有相关工作流、模型和代理的 YAML 配置文件。
-- 解析 YAML，构建强类型的 Python 配置实体（使用 Pydantic 模型）。
-- 填充全局 `CONFIG` 变量，以便全程使用。
-- 根据配置文件的位置设置上下文路径。
 
 ### 实体定义
 
