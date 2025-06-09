@@ -63,6 +63,7 @@ directions:
 
 tasks:
   # 由START进入第一个agent的prompt
+  # start_prompt可选，如果未指定就只传agent中的prompt
   start_prompt:
     role: user
     content: "这是本次一对一辅导所要讲的习题: {question}"

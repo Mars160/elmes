@@ -51,7 +51,7 @@ def extract(data: Dict[str, Any], key: str) -> List[Dict[str, Any]] | Dict[str, 
     if key == "tasks":
         tasks = data["tasks"]
         mode = tasks["mode"].lower()
-        start_prompt = tasks["start_prompt"]
+        start_prompt = tasks.get("start_prompt", None)
         if mode == "union":
             content = tasks["content"]
             subcontent_len: List[int] = []
@@ -73,10 +73,7 @@ def extract(data: Dict[str, Any], key: str) -> List[Dict[str, Any]] | Dict[str, 
                 entry = dict(zip(keys, c))
                 cc.append(entry)
             return {
-                "start_prompt": {
-                    "role": start_prompt["role"],
-                    "content": start_prompt["content"],
-                },
+                "start_prompt": start_prompt,
                 "variables": cc,
             }
         elif mode == "iter":
@@ -85,10 +82,7 @@ def extract(data: Dict[str, Any], key: str) -> List[Dict[str, Any]] | Dict[str, 
                 entry = c
                 result.append(entry)
             return {
-                "start_prompt": {
-                    "role": start_prompt["role"],
-                    "content": start_prompt["content"],
-                },
+                "start_prompt": start_prompt,
                 "variables": result,
             }
         else:

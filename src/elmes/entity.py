@@ -68,7 +68,7 @@ class AgentConfig(BaseModel):
 
 # Task
 class TaskConfig(BaseModel):
-    start_prompt: Prompt
+    start_prompt: Optional[Prompt] = None
     variables: List[Dict[str, str]] = []
 
 

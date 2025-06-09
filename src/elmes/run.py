@@ -1,6 +1,7 @@
 import asyncio
 
-from typing import Dict
+from tkinter import NONE
+from typing import Dict, Optional
 
 from tqdm.asyncio import tqdm
 
@@ -23,16 +24,23 @@ async def run(workers_num: int = CONFIG.globals.concurrency):
 
     for task in CONFIG.tasks.variables:
         agent_map, task = init_agent_map(model_map, task)
-        if task is not None:
-            start_prompt = replace_prompt(CONFIG.tasks.start_prompt, task)[0]
+        if CONFIG.tasks.start_prompt is not None:
+            if task is not None:
+                start_prompt = replace_prompt(CONFIG.tasks.start_prompt, task)
+            else:
+                start_prompt = CONFIG.tasks.start_prompt
         else:
-            start_prompt = CONFIG.tasks.start_prompt
+            start_prompt = NONE
         agent, _ = await apply_agent_direction(agent_map, task=task)
         agents.append((agent, start_prompt))
 
-    async def arun(agent: CompiledStateGraph, prompt: Prompt | Dict[str, str]):
+    async def arun(
+        agent: CompiledStateGraph, prompt: Optional[Prompt | Dict[str, str]]
+    ):
         if isinstance(prompt, Prompt):
             prompt = prompt.model_dump()
+        elif prompt is None:
+            prompt = []  # type: ignore
         async with sem:
             try:
                 await agent.ainvoke(
@@ -43,7 +51,6 @@ async def run(workers_num: int = CONFIG.globals.concurrency):
                     },
                     stream_mode="values",
                 )
-                print(1)
             except GraphRecursionError:
                 print(
                     f"Recursion limit {CONFIG.globals.recursion_limit} reached for one task"
