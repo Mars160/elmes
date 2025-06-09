@@ -27,16 +27,20 @@ def generate(config: str, debug: bool):
 
 @click.command(help="Export chat databases to JSON format")
 @click.option(
-    "--input-dir", default="inputs", help="Directory containing chat databases"
+    "--config", default="config.yaml", help="Directory containing chat databases"
 )
 @click.option("--debug", default=False, help="Debug Mode", is_flag=True)
-def export_json(input_dir: str, debug: bool):
+def export_json(config: str, debug: bool):
     set_debug(debug)
-    input = Path(input_dir)
-    if not input.exists():
-        raise ValueError(f"Input directory {input} Not Exists!")
-    elif not input.is_dir():
-        raise ValueError(f"{input} is not a directory.")
+    input = Path(config)
+    from elmes.config import load_conf
+
+    path = Path(config)
+    load_conf(path)
+
+    from elmes.config import CONFIG
+
+    input = CONFIG.globals.memory.path
     output = input
 
     dbfiles = []

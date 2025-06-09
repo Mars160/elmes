@@ -24,8 +24,9 @@ def load_conf(path: Path):
     for k in data.keys():
         c = extract(data, k)
         n_data[k] = c
+    if n_data["globals"].get("memory", {}).get("path", None) is None:
+        n_data["globals"]["memory"]["path"] = path.parent / path.stem
     CONFIG = ElmesConfig(**n_data)
-    CONFIG.globals.memory.path = path.parent / path.stem
 
 
 # load_conf(Path(__file__).parent.parent.parent / "guided_teaching.yaml")
