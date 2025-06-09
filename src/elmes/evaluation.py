@@ -6,6 +6,7 @@ from langgraph.prebuilt import create_react_agent
 from langchain.chat_models.base import BaseChatModel
 from elmes.entity import ExportFormat
 from pydantic import BaseModel
+from tenacity import retry, stop_after_attempt, wait_fixed
 import json
 
 
@@ -34,6 +35,10 @@ def generate_evaluation_tool() -> BaseTool:
     return save_to_db  # type: ignore
 
 
+@retry(
+    stop=stop_after_attempt(CONFIG.globals.retry.attempt),
+    wait=wait_fixed(CONFIG.globals.retry.interval),
+)
 async def evaluate(
     model: BaseChatModel, exported_result: ExportFormat
 ) -> Dict[str, Any]:

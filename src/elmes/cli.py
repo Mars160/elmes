@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Dict, Any
 
 from langchain.globals import set_debug
+from tenacity import RetryError
 
 # set_debug(True)
 
@@ -106,7 +107,7 @@ def export_json(input_dir: str, debug: bool):
     help="Path to the configuration file",
 )
 @click.option("--debug", default=False, help="Debug Mode", is_flag=True)
-@click.option("--avg", default=True, help="Calculate the average score", is_flag=True)
+@click.option("--avg/--no-avg", default=True, help="Calculate the average score")
 def eval(config: Path, debug: bool, avg: bool):
     set_debug(debug)
     from elmes.config import load_conf
@@ -136,8 +137,8 @@ def eval(config: Path, debug: bool, avg: bool):
             with open(eval_path / file.name, "w", encoding="utf8") as f:
                 json.dump(eval, f, ensure_ascii=False, indent=4)
             return eval
-        except:  # noqa: E722
-            print(f"Error evaluating {file}")
+        except RetryError as e:  # noqa: E722
+            print(f"Error evaluating {file}", e.last_attempt.exception())
             return {}
 
     async def main():
