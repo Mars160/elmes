@@ -95,7 +95,7 @@ CLI 功能包括：
 例如使用方式：
 ```bash
 elmes generate --config config.yaml --debug
-elmes export_json --input_dir input_dir --debug
+elmes export_json --config config.yaml --debug
 elmes eval --config config.yaml --debug 
 elmes pipeline --config config.yaml --debug 
 ```

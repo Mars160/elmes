@@ -13,6 +13,10 @@ from tenacity import RetryError
 @click.option("--config", default="config.yaml", help="Path to the configuration file.")
 @click.option("--debug", default=False, help="Debug Mode", is_flag=True)
 def generate(config: str, debug: bool):
+    generate_logic(config, debug)
+
+
+def generate_logic(config: str, debug: bool):
     set_debug(debug)
     from elmes.config import load_conf
 
@@ -31,6 +35,10 @@ def generate(config: str, debug: bool):
 )
 @click.option("--debug", default=False, help="Debug Mode", is_flag=True)
 def export_json(config: str, debug: bool):
+    export_json_logic(config, debug)
+
+
+def export_json_logic(config: str, debug: bool):
     set_debug(debug)
     input = Path(config)
     from elmes.config import load_conf
@@ -113,6 +121,10 @@ def export_json(config: str, debug: bool):
 @click.option("--debug", default=False, help="Debug Mode", is_flag=True)
 @click.option("--avg/--no-avg", default=True, help="Calculate the average score")
 def eval(config: Path, debug: bool, avg: bool):
+    eval_logic(config, debug, avg)
+
+
+def eval_logic(config: Path, debug: bool, avg: bool):
     set_debug(debug)
     from elmes.config import load_conf
 
@@ -233,12 +245,9 @@ def eval(config: Path, debug: bool, avg: bool):
 )
 @click.option("--debug", is_flag=True, help="Enable debug mode")
 def pipeline(config, debug=False):
-    set_debug(debug)
-    config_path = Path(config)
-
-    generate(config=config_path)
-    export_json(config=config_path.parent / config_path.stem)
-    eval(config=config_path.stem)
+    generate_logic(config=config, debug=debug)
+    export_json_logic(config=config, debug=debug)
+    eval_logic(config=config, debug=debug, avg=True)
 
 
 @click.group()
