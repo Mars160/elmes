@@ -10,6 +10,11 @@ globals:
     attempt: 3
     # 重试间隔（秒）
     interval: 3
+  # 脚本运行期间记忆配置
+  memory:
+    # 所有记忆、对话记录、评测结果等信息的存储路径
+    # 默认和配置文件同名目录
+    path: ./result
 
 # 定义任务中需要用到的模型
 models:
