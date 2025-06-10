@@ -6,6 +6,7 @@ from typing_extensions import TypedDict
 from langgraph.graph.message import add_messages
 from pathlib import Path
 from aiosqlite import Connection
+from polyfactory.factories.pydantic_factory import ModelFactory
 
 
 # Common
@@ -154,6 +155,14 @@ class EvalConfig(BaseModel):
         json_schema = model.model_json_schema()
         return json.dumps(json_schema, ensure_ascii=False)
 
+    def format_to_json_example(self) -> str:
+        mmodel: type[BaseModel] = self.format_to_pydantic()
+
+        class MMF(ModelFactory):
+            __model__ = mmodel
+
+        return MMF().build().json()
+
     def get_prompts(self) -> Tuple[str, List[Prompt]]:
         """获取系统提示和其他提示词"""
         system_prompt = ""
@@ -167,7 +176,7 @@ class EvalConfig(BaseModel):
                 other_prompt.append(p)
         return system_prompt, other_prompt
 
-    def format_to_pydantic(self) -> BaseModel:
+    def format_to_pydantic(self) -> type[BaseModel]:
         def field_type_from_format(f: FormatField) -> tuple:
             """将FormatField转成pydantic字段元组（类型，Field信息）"""
             python_type_map = {
@@ -186,7 +195,7 @@ class EvalConfig(BaseModel):
 
         def build_model_from_format(
             fields: List[FormatField], model_name: str = "DynamicModel"
-        ) -> BaseModel:
+        ) -> type[BaseModel]:
             annotations = {}
             for f in fields:
                 annotations[f.field] = field_type_from_format(f)

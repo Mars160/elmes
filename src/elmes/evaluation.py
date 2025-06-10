@@ -78,20 +78,30 @@ async def evaluate(
         data = json.loads(a["messages"][-1].content)
         return data
     elif CONFIG.evaluation.format_mode == "prompt":
+        # print(CONFIG.evaluation.format_to_json_example())
         agent = create_react_agent(
             model=model,
             tools=[],
             prompt=system_prompt
             + "\n\n# NOTE！\n\n"
-            + "You should keep your output in the following JSON schema format, and wrap it with <START OUTPUT> and <END OUTPUT> ONLY!.\n\n".upper()
-            + f"\n\njson schema:\n\n\n{CONFIG.evaluation.format_to_json_schema()}\n",
+            + "You should keep your output in the following JSON format blow, and wrap it with exactlly <START OF EVAL OUTPUT> and <END OF EVAL OUTPUT> ONLY!, no escape.\n\n".upper()
+            + f"\n\njson schema:\n\n\n{CONFIG.evaluation.format_to_json_schema()}\n\n\n"
+            + "\n\nEXAMPLE:\n\n"
+            + "\n\n<START OF EVAL OUTPUT>\n\n"
+            + "```json"
+            + f"{CONFIG.evaluation.format_to_json_example()}\n"
+            + "```<END OF EVAL OUTPUT>",
         )
 
-        a = agent.invoke({"messages": ops})
-        response = a["messages"][-1].content
-        # print(response)
+        a = await agent.ainvoke({"messages": ops})
+        response: str = a["messages"][-1].content
+
+        print(response)
+
         # 正则表达式匹配<START OUTPUT>和<END OUTPUT>
-        match = re.findall(r"<START OUTPUT>(.*)<END OUTPUT>", response, re.DOTALL)
+        match = re.findall(
+            r"<START OF EVAL OUTPUT>(.*)<END OF EVAL OUTPUT>", response, re.DOTALL
+        )
         if len(match) > 0:
             text = match[-1]
             # 如果text被```包围，去掉
