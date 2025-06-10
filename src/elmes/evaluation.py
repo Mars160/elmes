@@ -86,17 +86,22 @@ async def evaluate(
             + "\n\n# NOTE！\n\n"
             + "You should keep your output in the following JSON format blow, and wrap it with exactlly <START OF EVAL OUTPUT> and <END OF EVAL OUTPUT> ONLY!, no escape.\n\n".upper()
             + f"\n\njson schema:\n\n\n{CONFIG.evaluation.format_to_json_schema()}\n\n\n"
-            + "\n\nEXAMPLE:\n\n"
+            + "\n\nFORMAT EXAMPLE:\n\n"
             + "\n\n<START OF EVAL OUTPUT>\n\n"
-            + "```json"
+            # + "```json"
             + f"{CONFIG.evaluation.format_to_json_example()}\n"
-            + "```<END OF EVAL OUTPUT>",
+            # + "```"
+            + "<END OF EVAL OUTPUT>",
         )
 
         a = await agent.ainvoke({"messages": ops})
         response: str = a["messages"][-1].content
 
-        print(response)
+        # Fuck Gemini
+        response = response.replace("\\<", "<")
+        response = response.replace("\\>", ">")
+
+        # print(response)
 
         # 正则表达式匹配<START OUTPUT>和<END OUTPUT>
         match = re.findall(
