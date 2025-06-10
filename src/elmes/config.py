@@ -21,7 +21,7 @@ def load_conf(path: Path):
             for d in yaml.safe_load_all(t):
                 data = d
     # 编码错误
-    except UnicodeDecodeError as e:
+    except UnicodeDecodeError:
         with open(path, "r", encoding="gbk") as f:
             t = f.read()
             for d in yaml.safe_load_all(t):
