@@ -15,16 +15,25 @@ def load_conf(path: Path):
         return
     global CONFIG
     data: Dict[str, Dict[str, Any]] = {}
-    with open(path, "r") as f:
-        t = f.read()
-        for d in yaml.safe_load_all(t):
-            data = d
+    try:
+        with open(path, "r", encoding="utf8") as f:
+            t = f.read()
+            for d in yaml.safe_load_all(t):
+                data = d
+    # 编码错误
+    except UnicodeDecodeError as e:
+        with open(path, "r", encoding="gbk") as f:
+            t = f.read()
+            for d in yaml.safe_load_all(t):
+                data = d
 
     n_data = {}
     for k in data.keys():
         c = extract(data, k)
         n_data[k] = c
     if n_data["globals"].get("memory", {}).get("path", None) is None:
+        if "memory" not in n_data["globals"]:
+            n_data["globals"]["memory"] = {}
         n_data["globals"]["memory"]["path"] = path.parent / path.stem
     CONFIG = ElmesConfig(**n_data)
 
