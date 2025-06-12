@@ -236,6 +236,99 @@ def eval_logic(config: Path, debug: bool, avg: bool):
 
     asyncio.run(main())
 
+@click.command(
+    help="Visualize the results in all CSV file in the specified directory."
+)
+@click.argument(
+    "input_dir", 
+    type=click.Path(exists=True), 
+)
+@click.option(
+    "--x-rotation",
+    type=int,
+    default=45,
+)
+def visualize(input_dir: str, x_rotation: int):
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import numpy as np
+
+    plt.rcParams['font.family'] = ['PingFang SC', 'Heiti SC', 'STHeiti', 'Songti SC']
+    plt.rcParams['axes.unicode_minus'] = False
+
+
+    input_path = Path(input_dir)
+    csvs = input_path.rglob("*.csv")
+
+    task_name = ""
+    keys = []
+    models = []
+    values = {}
+
+    for csv in csvs:
+        stem_split = csv.stem.rsplit("_", 1)
+        if task_name == "":
+            task_name = stem_split[0]
+        elif task_name != stem_split[0]:
+            raise ValueError(f"Multiple task names found in CSV files. {task_name} and {stem_split[0]} are different.")
+
+        model = stem_split[1]
+        models.append(model)
+
+        data = pd.read_csv(csv)
+        data = data.drop(columns=["task_id", "avg"])
+        data = data.iloc[-1].to_dict()
+
+        if not keys:
+            keys = list(data.keys())
+            for k in keys:
+                values[k] = []
+        elif keys != list(data.keys()):
+            raise ValueError(f"Data keys do not match across CSV files. [{','.join(keys)}] and [{','.join(data.keys())}] are different.")
+        
+        for k in keys:
+            values[k].append(data[k])
+
+    # 构建 DataFrame
+    df_dict = {task_name: models}
+    for k in keys:
+        df_dict[k] = values[k]
+    
+    df = pd.DataFrame(df_dict)
+
+    sns.set_style("white")
+
+    # ==== ✅ 自适应画布宽度 ====
+    fig_width = max(8, len(df) * 0.8)  # 每个模型 0.8 英寸，最小宽度为 8
+    plt.figure(figsize=(fig_width, 6))
+
+    df.set_index(task_name).plot(kind='bar', stacked=True, ax=plt.gca())
+    plt.xticks(rotation=x_rotation)
+    plt.tight_layout()
+    plt.savefig(input_path / f"stack_{task_name}.png", dpi=300)
+
+    # ==== ✅ 雷达图 ====
+    # 准备数据
+    num_vars = len(keys)
+    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+    angles += angles[:1]  # 闭合图形
+    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+    for idx, model in enumerate(models):
+        scores = [values[k][idx] for k in keys]
+        scores += scores[:1]  # 闭合图形
+        ax.plot(angles, scores, label=model, linewidth=2)
+        ax.fill(angles, scores, alpha=0.1)
+    # 设置标签和样式
+    ax.set_thetagrids(np.degrees(angles[:-1]), keys) # type: ignore
+    ax.set_title(f"{task_name}", size=16)
+    ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1))
+    plt.tight_layout()
+    plt.savefig(input_path / f"radar_{task_name}.png", dpi=300)
+
+
+
+
 
 @click.command(
     help="Run the pipeline to generate, export JSON files, and evaluate the results."
@@ -259,3 +352,5 @@ main.add_command(generate)
 main.add_command(export_json)
 main.add_command(eval)
 main.add_command(pipeline)
+
+main.add_command(visualize)

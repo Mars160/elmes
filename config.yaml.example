@@ -14,7 +14,8 @@ globals:
   memory:
     # 所有记忆、对话记录、评测结果等信息的存储路径
     # 默认和配置文件同名目录
-    path: ./result
+    # 记忆存放的位置，推荐命名为 任务名/模型名
+    path: ./multiturn_task/gpt-4o-mini
 
 # 定义任务中需要用到的模型
 models:
@@ -95,8 +96,8 @@ tasks:
 
 # 设定用于评估的模型和提示词，以及输出的格式
 evaluation:
-  # 评估任务名称
-  name: 引导式讲题
+  # 评估任务名称, 推荐命名为 任务名_模型名
+  name: multiturn_task_gpt-4o-mini
   # 选择用于评估的模型
   model: 4o_teacher
   # 设置用于评估的提示词

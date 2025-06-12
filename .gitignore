@@ -16,6 +16,7 @@ wheels/
 *.yaml
 *.json
 *.csv
+*.png
 
 outputs/
 guided_teaching/
