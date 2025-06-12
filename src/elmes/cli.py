@@ -1,3 +1,4 @@
+from turtle import st
 import click
 
 from pathlib import Path
@@ -235,6 +236,8 @@ def eval_logic(config: Path, debug: bool, avg: bool):
         # csv_gbk.close()
 
     asyncio.run(main())
+import click
+from pathlib import Path
 
 @click.command(
     help="Visualize the results in all CSV file in the specified directory."
@@ -251,12 +254,17 @@ def eval_logic(config: Path, debug: bool, avg: bool):
 def visualize(input_dir: str, x_rotation: int):
     import pandas as pd
     import matplotlib.pyplot as plt
-    import seaborn as sns
     import numpy as np
+    from matplotlib import font_manager
 
-    plt.rcParams['font.family'] = ['PingFang SC', 'Heiti SC', 'STHeiti', 'Songti SC']
-    plt.rcParams['axes.unicode_minus'] = False
+    from importlib.resources import files
 
+    font_path = files('assets.fonts').joinpath('sarasa-mono-sc-regular.ttf')
+    font_path = str(font_path)
+
+    font_manager.fontManager.addfont(font_path)
+    plt.rcParams['font.sans-serif'] = 'Sarasa Mono SC'
+    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
     input_path = Path(input_dir)
     csvs = input_path.rglob("*.csv")
@@ -297,14 +305,13 @@ def visualize(input_dir: str, x_rotation: int):
     
     df = pd.DataFrame(df_dict)
 
-    sns.set_style("white")
-
     # ==== ✅ 自适应画布宽度 ====
     fig_width = max(8, len(df) * 0.8)  # 每个模型 0.8 英寸，最小宽度为 8
-    plt.figure(figsize=(fig_width, 6))
+    fig, ax = plt.subplots(figsize=(fig_width, 6))
 
-    df.set_index(task_name).plot(kind='bar', stacked=True, ax=plt.gca())
-    plt.xticks(rotation=x_rotation)
+    df.set_index(task_name).plot(kind='bar', stacked=True, ax=ax)
+    ax.set_xticklabels(df[task_name], rotation=x_rotation)
+    ax.set_title(f"{task_name} 各模型表现")
     plt.tight_layout()
     plt.savefig(input_path / f"stack_{task_name}.png", dpi=300)
 
@@ -314,13 +321,15 @@ def visualize(input_dir: str, x_rotation: int):
     angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
     angles += angles[:1]  # 闭合图形
     fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+    
     for idx, model in enumerate(models):
         scores = [values[k][idx] for k in keys]
         scores += scores[:1]  # 闭合图形
         ax.plot(angles, scores, label=model, linewidth=2)
         ax.fill(angles, scores, alpha=0.1)
+
     # 设置标签和样式
-    ax.set_thetagrids(np.degrees(angles[:-1]), keys) # type: ignore
+    ax.set_thetagrids(np.degrees(angles[:-1]), keys)  # type: ignore
     ax.set_title(f"{task_name}", size=16)
     ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1))
     plt.tight_layout()
