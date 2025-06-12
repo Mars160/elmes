@@ -308,7 +308,7 @@ def visualize(input_dir: str, x_rotation: int):
 
     df.set_index(task_name).plot(kind='bar', stacked=True, ax=ax)
     ax.set_xticklabels(df[task_name], rotation=x_rotation)
-    ax.set_title(f"{task_name} 各模型表现")
+    ax.set_title(f"{task_name}")
     plt.tight_layout()
     plt.savefig(input_path / f"stack_{task_name}.png", dpi=300)
 
