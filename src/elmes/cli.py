@@ -169,8 +169,8 @@ def eval_logic(config: Path, debug: bool, avg: bool):
 
         evals = await tqdm.gather(*eval_tasks)
 
-        csv_utf8 = open(eval_path / "result-utf8.csv", "w", encoding="utf-8")
-        csv_gbk = open(eval_path / "result-gbk.csv", "w", encoding="gbk")
+        csv_utf8 = open(eval_path / f"{CONFIG.evaluation.name}.csv", "w", encoding="utf-8")
+        # csv_gbk = open(eval_path / f"{CONFIG.evaluation.name}-gbk.csv", "w", encoding="gbk")
 
         title = ["task_id"]
         # title = []
@@ -186,7 +186,7 @@ def eval_logic(config: Path, debug: bool, avg: bool):
             title.append("avg")
 
         csv_utf8.write(",".join(title) + "\n")
-        csv_gbk.write(",".join(title) + "\n")
+        # csv_gbk.write(",".join(title) + "\n")
 
         if avg:
             row = len(task_ids) + 1
@@ -208,7 +208,7 @@ def eval_logic(config: Path, debug: bool, avg: bool):
                 matrix[idx][col - 1] = sum / (col - 1)
                 contents.append(f"{matrix[idx][col - 1]:.2f}")
                 csv_utf8.write(",".join(contents) + "\n")
-                csv_gbk.write(",".join(contents) + "\n")
+                # csv_gbk.write(",".join(contents) + "\n")
             # 计算每列的平均值
             for col_idx in range(col):
                 # print(matrix)
@@ -222,17 +222,17 @@ def eval_logic(config: Path, debug: bool, avg: bool):
             write_str.insert(0, "Avg")
             # 写入最后一行的平均值
             csv_utf8.write(",".join(write_str) + "\n")
-            csv_gbk.write(",".join(write_str) + "\n")
+            # csv_gbk.write(",".join(write_str) + "\n")
         else:
             for task_id, eval in zip(task_ids, evals):
                 contents = [task_id]
                 for f, c in eval.items():
                     contents.append(f"{c}")
                 csv_utf8.write(",".join(contents) + "\n")
-                csv_gbk.write(",".join(contents) + "\n")
+                # csv_gbk.write(",".join(contents) + "\n")
 
         csv_utf8.close()
-        csv_gbk.close()
+        # csv_gbk.close()
 
     asyncio.run(main())
 

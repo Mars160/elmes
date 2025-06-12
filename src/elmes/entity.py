@@ -146,6 +146,7 @@ class FormatField(BaseModel):
 # Evaluation
 class EvalConfig(BaseModel):
     model: str
+    name: Optional[str]
     prompt: List[Prompt]
     format: List[FormatField]
     format_mode: Literal["tool", "prompt"] = "tool"
