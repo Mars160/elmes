@@ -1,4 +1,3 @@
-from turtle import st
 import click
 
 from pathlib import Path
@@ -236,8 +235,6 @@ def eval_logic(config: Path, debug: bool, avg: bool):
         # csv_gbk.close()
 
     asyncio.run(main())
-import click
-from pathlib import Path
 
 @click.command(
     help="Visualize the results in all CSV file in the specified directory."
