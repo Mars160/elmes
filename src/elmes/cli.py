@@ -153,7 +153,7 @@ def eval_logic(config: Path, debug: bool, avg: bool):
             with open(eval_path / file.name, "w", encoding="utf8") as f:
                 json.dump(eval, f, ensure_ascii=False, indent=4)
             return eval
-        except RetryError as e:  # noqa: E722
+        except RetryError as e:
             print(f"Error evaluating {file}", e.last_attempt.exception())
             return {}
 
