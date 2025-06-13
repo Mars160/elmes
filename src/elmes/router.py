@@ -2,9 +2,11 @@ from langgraph.prebuilt.chat_agent_executor import AgentState
 from langchain_core.messages import BaseMessage
 from typing import Union, Sequence, Callable, Tuple, Dict
 
+from elmes.utils import remove_think
+
 
 def any_keyword_route(
-    keywords: Sequence[str], exists_to: str, else_to: str
+    keywords: Sequence[str], exists_to: str, else_to: str, think_as_message: bool = False
 ) -> Tuple[Callable[..., bool], Dict[bool, str]]:
     """Route based on keywords."""
     path_map = {
@@ -22,6 +24,8 @@ def any_keyword_route(
             raise ValueError("No messages found, error while routing")
 
         content = message.content
+        if not think_as_message:
+            content = remove_think(content)  # Remove think tags
         if isinstance(content, str):
             content = content.lower()
             r = any(keyword in content for keyword in keywords)

@@ -5,6 +5,22 @@ from typing import Dict, Any, List, Union
 from pathlib import Path
 from elmes.entity import Prompt
 
+import re
+
+think_regex = re.compile(r"<think>(.*?)</think>", re.DOTALL)
+
+def remove_think(prompt: str | list[str | dict[str, str]] | dict[str, str]):
+    if isinstance(prompt, str):
+        return think_regex.sub("", prompt)
+    elif isinstance(prompt, dict):
+        return {
+            "role": prompt["role"],
+            "content": remove_think(prompt["content"]),
+        }
+    elif isinstance(prompt, list):
+        return [remove_think(item) for item in prompt]
+    else:
+        raise ValueError("Invalid type")
 
 def parse_yaml(path: Path) -> Dict[str, Any]:  # type: ignore
     with open(path, "r") as f:
@@ -14,7 +30,6 @@ def parse_yaml(path: Path) -> Dict[str, Any]:  # type: ignore
 
 
 PromptType = Union[Dict[str, str], Prompt]
-
 
 def replace_prompt(
     prompt: Union[List[PromptType], PromptType], prompt_map: Dict[str, str]

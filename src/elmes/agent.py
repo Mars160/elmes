@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Callable, Optional, Tuple, Awaitable
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 from elmes.entity import AgentConfig
-from elmes.utils import replace_prompt
+from elmes.utils import replace_prompt, remove_think
 from elmes.config import CONFIG
 
 
@@ -33,10 +33,11 @@ def _init_agent_from_dict(
             # n_m = state["messages"]
             n_m = []
             for item in state["messages"]:
+                content = remove_think(item.content)
                 if item.name == agent_name:
-                    item = AIMessage(content=item.content, type="ai")
+                    item = AIMessage(content=content, type="ai")
                 else:
-                    item = HumanMessage(content=item.content, type="human")
+                    item = HumanMessage(content=content, type="human")
                 n_m.append(item)
             if len(n_m) > ac.memory.keep_turns * 2 + 1:
                 n_m = n_m[-ac.memory.keep_turns * 2 - 1 :]
