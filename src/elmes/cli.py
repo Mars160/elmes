@@ -13,16 +13,15 @@ from tenacity import RetryError
 @click.option("--config", default="config.yaml", help="Path to the configuration file.")
 @click.option("--debug", default=False, help="Debug Mode", is_flag=True)
 def generate(config: str, debug: bool):
-    generate_logic(config, debug)
-
-
-def generate_logic(config: str, debug: bool):
     set_debug(debug)
     from elmes.config import load_conf
 
     path = Path(config)
     load_conf(path)
+    generate_logic()
 
+
+def generate_logic():
     from elmes.run import run
     import asyncio
 
@@ -35,17 +34,15 @@ def generate_logic(config: str, debug: bool):
 )
 @click.option("--debug", default=False, help="Debug Mode", is_flag=True)
 def export_json(config: str, debug: bool):
-    export_json_logic(config, debug)
-
-
-def export_json_logic(config: str, debug: bool):
     set_debug(debug)
-    input = Path(config)
     from elmes.config import load_conf
 
     path = Path(config)
     load_conf(path)
+    export_json_logic()
 
+
+def export_json_logic():
     from elmes.config import CONFIG
 
     input = CONFIG.globals.memory.path
@@ -121,15 +118,14 @@ def export_json_logic(config: str, debug: bool):
 @click.option("--debug", default=False, help="Debug Mode", is_flag=True)
 @click.option("--avg/--no-avg", default=True, help="Calculate the average score")
 def eval(config: Path, debug: bool, avg: bool):
-    eval_logic(config, debug, avg)
-
-
-def eval_logic(config: Path, debug: bool, avg: bool):
+    eval_logic(avg)
     set_debug(debug)
     from elmes.config import load_conf
 
     load_conf(config)
 
+
+def eval_logic(avg: bool):
     from elmes.config import CONFIG
 
     input_dir = CONFIG.globals.memory.path
@@ -249,6 +245,9 @@ def eval_logic(config: Path, debug: bool, avg: bool):
     default=45,
 )
 def visualize(input_dir: str, x_rotation: int):
+    visualize_logic(input_dir, x_rotation)
+
+def visualize_logic(input_dir: str, x_rotation: int):
     import pandas as pd
     import matplotlib.pyplot as plt
     import numpy as np
@@ -344,9 +343,13 @@ def visualize(input_dir: str, x_rotation: int):
 )
 @click.option("--debug", is_flag=True, help="Enable debug mode")
 def pipeline(config, debug=False):
-    generate_logic(config=config, debug=debug)
-    export_json_logic(config=config, debug=debug)
-    eval_logic(config=config, debug=debug, avg=True)
+    set_debug(debug)
+    from elmes.config import load_conf
+
+    load_conf(config)
+    generate_logic()
+    export_json_logic()
+    eval_logic(avg=True)
 
 
 @click.group()
