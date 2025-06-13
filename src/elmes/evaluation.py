@@ -74,7 +74,7 @@ async def evaluate(
             # response_format=CONFIG.evaluation.format_to_pydantic(),  # type: ignore
         )
 
-        a = agent.invoke({"messages": ops})
+        a = await agent.ainvoke({"messages": ops})
         data = json.loads(a["messages"][-1].content)
         return data
     elif CONFIG.evaluation.format_mode == "prompt":
