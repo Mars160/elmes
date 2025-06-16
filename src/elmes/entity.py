@@ -200,7 +200,7 @@ class EvalConfig(BaseModel):
             annotations = {}
             for f in fields:
                 annotations[f.field] = field_type_from_format(f)
-            return create_model(model_name, **annotations)  # type: ignore
+            return create_model(model_name, **annotations)
 
         return build_model_from_format(self.format, "GeneratedModel")
 
