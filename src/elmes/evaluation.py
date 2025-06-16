@@ -74,7 +74,6 @@ async def evaluate(
             # model=model,
             prompt=system_prompt
             + "\n\n请调用save_result_to_database工具以将评估结果存入数据库",
-            # response_format=CONFIG.evaluation.format_to_pydantic(),  # type: ignore
         )
 
         a = await agent.ainvoke({"messages": ops})
