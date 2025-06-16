@@ -118,11 +118,11 @@ def export_json_logic():
 @click.option("--debug", default=False, help="Debug Mode", is_flag=True)
 @click.option("--avg/--no-avg", default=True, help="Calculate the average score")
 def eval(config: Path, debug: bool, avg: bool):
-    eval_logic(avg)
     set_debug(debug)
     from elmes.config import load_conf
 
     load_conf(config)
+    eval_logic(avg)
 
 
 def eval_logic(avg: bool):
@@ -165,7 +165,9 @@ def eval_logic(avg: bool):
 
         evals = await tqdm.gather(*eval_tasks)
 
-        csv_utf8 = open(eval_path / f"{CONFIG.evaluation.name}.csv", "w", encoding="utf-8")
+        csv_utf8 = open(
+            eval_path / f"{CONFIG.evaluation.name}.csv", "w", encoding="utf-8"
+        )
         # csv_gbk = open(eval_path / f"{CONFIG.evaluation.name}-gbk.csv", "w", encoding="gbk")
 
         title = ["task_id"]
@@ -232,12 +234,11 @@ def eval_logic(avg: bool):
 
     asyncio.run(main())
 
-@click.command(
-    help="Visualize the results in all CSV file in the specified directory."
-)
+
+@click.command(help="Visualize the results in all CSV file in the specified directory.")
 @click.argument(
-    "input_dir", 
-    type=click.Path(exists=True), 
+    "input_dir",
+    type=click.Path(exists=True),
 )
 @click.option(
     "--x-rotation",
@@ -247,6 +248,7 @@ def eval_logic(avg: bool):
 def visualize(input_dir: str, x_rotation: int):
     visualize_logic(input_dir, x_rotation)
 
+
 def visualize_logic(input_dir: str, x_rotation: int):
     import pandas as pd
     import matplotlib.pyplot as plt
@@ -255,12 +257,12 @@ def visualize_logic(input_dir: str, x_rotation: int):
 
     from importlib.resources import files
 
-    font_path = files('assets.fonts').joinpath('sarasa-mono-sc-regular.ttf')
+    font_path = files("assets.fonts").joinpath("sarasa-mono-sc-regular.ttf")
     font_path = str(font_path)
 
     font_manager.fontManager.addfont(font_path)
-    plt.rcParams['font.sans-serif'] = 'Sarasa Mono SC'
-    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+    plt.rcParams["font.sans-serif"] = "Sarasa Mono SC"
+    plt.rcParams["axes.unicode_minus"] = False  # 解决负号显示问题
 
     input_path = Path(input_dir)
     csvs = input_path.rglob("*.csv")
@@ -275,7 +277,9 @@ def visualize_logic(input_dir: str, x_rotation: int):
         if task_name == "":
             task_name = stem_split[0]
         elif task_name != stem_split[0]:
-            raise ValueError(f"Multiple task names found in CSV files. {task_name} and {stem_split[0]} are different.")
+            raise ValueError(
+                f"Multiple task names found in CSV files. {task_name} and {stem_split[0]} are different."
+            )
 
         model = stem_split[1]
         models.append(model)
@@ -289,8 +293,10 @@ def visualize_logic(input_dir: str, x_rotation: int):
             for k in keys:
                 values[k] = []
         elif keys != list(data.keys()):
-            raise ValueError(f"Data keys do not match across CSV files. [{','.join(keys)}] and [{','.join(data.keys())}] are different.")
-        
+            raise ValueError(
+                f"Data keys do not match across CSV files. [{','.join(keys)}] and [{','.join(data.keys())}] are different."
+            )
+
         for k in keys:
             values[k].append(data[k])
 
@@ -298,14 +304,14 @@ def visualize_logic(input_dir: str, x_rotation: int):
     df_dict = {task_name: models}
     for k in keys:
         df_dict[k] = values[k]
-    
+
     df = pd.DataFrame(df_dict)
 
     # ==== ✅ 自适应画布宽度 ====
     fig_width = max(8, len(df) * 0.8)  # 每个模型 0.8 英寸，最小宽度为 8
     fig, ax = plt.subplots(figsize=(fig_width, 6))
 
-    df.set_index(task_name).plot(kind='bar', stacked=True, ax=ax)
+    df.set_index(task_name).plot(kind="bar", stacked=True, ax=ax)
     ax.set_xticklabels(df[task_name], rotation=x_rotation)
     ax.set_title(f"{task_name}")
     plt.tight_layout()
@@ -317,7 +323,7 @@ def visualize_logic(input_dir: str, x_rotation: int):
     angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
     angles += angles[:1]  # 闭合图形
     fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
-    
+
     for idx, model in enumerate(models):
         scores = [values[k][idx] for k in keys]
         scores += scores[:1]  # 闭合图形
@@ -330,9 +336,6 @@ def visualize_logic(input_dir: str, x_rotation: int):
     ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1))
     plt.tight_layout()
     plt.savefig(input_path / f"radar_{task_name}.png", dpi=300)
-
-
-
 
 
 @click.command(
