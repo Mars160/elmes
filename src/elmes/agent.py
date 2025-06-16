@@ -11,6 +11,8 @@ from elmes.entity import AgentConfig
 from elmes.utils import replace_prompt, remove_think
 from elmes.config import CONFIG
 
+import copy
+
 
 def _init_agent_from_dict(
     ac: AgentConfig,
@@ -19,7 +21,9 @@ def _init_agent_from_dict(
     dynamic_prompt_map: Optional[Dict[str, str]] = None,
 ) -> Callable[..., Awaitable[Dict[str, List[Any]]]]:
     if dynamic_prompt_map is not None:
-        ac.prompt = replace_prompt(ac.prompt, dynamic_prompt_map)  # type: ignore
+        ac_prompt = replace_prompt(ac.prompt, dynamic_prompt_map)  # type: ignore
+    else:
+        ac_prompt = copy.deepcopy(ac.prompt)  # fix shallow copy导致的数据错误
     m = model_map[ac.model]
 
     @retry(
@@ -28,7 +32,7 @@ def _init_agent_from_dict(
     )
     async def chatbot(state: AgentState) -> Dict[str, List[Any]]:
         if state["messages"] == []:
-            n_m = ac.prompt
+            n_m = ac_prompt
         else:
             # n_m = state["messages"]
             n_m = []
@@ -41,7 +45,7 @@ def _init_agent_from_dict(
                 n_m.append(item)
             if len(n_m) > ac.memory.keep_turns * 2 + 1:
                 n_m = n_m[-ac.memory.keep_turns * 2 - 1 :]
-            n_m = ac.prompt + n_m
+            n_m = ac_prompt + n_m
         r = await m.ainvoke(n_m)  # type: ignore
         r.name = agent_name
         return {"messages": [r]}
