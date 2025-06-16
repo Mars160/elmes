@@ -38,7 +38,7 @@ def _init_agent_from_dict(
             for item in state["messages"]:
                 content = remove_think(item.content)
                 if item.name == agent_name:
-                    item = AIMessage(content=content, type="ai")
+                    item = AIMessage(content=content, type="ai")  # type: ignore
                 else:
                     item = HumanMessage(content=content, type="human")
                 n_m.append(item)

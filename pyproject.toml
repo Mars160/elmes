@@ -10,6 +10,7 @@ dependencies = [
     "grandalf>=0.8",
     "langchain>=0.3.25",
     "langchain-openai>=0.3.18",
+    "langgraph>=0.4.7",
     "langgraph-checkpoint-sqlite>=2.0.10",
     "langgraph-swarm>=0.0.11",
     "matplotlib>=3.10.3",

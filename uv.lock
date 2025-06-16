@@ -361,7 +361,7 @@ wheels = [
 
 [[package]]
 name = "elmes"
-version = "0.1.4"
+version = "0.1.5"
 source = { editable = "." }
 dependencies = [
     { name = "anthropic" },
@@ -369,6 +369,7 @@ dependencies = [
     { name = "grandalf" },
     { name = "langchain" },
     { name = "langchain-openai" },
+    { name = "langgraph" },
     { name = "langgraph-checkpoint-sqlite" },
     { name = "langgraph-swarm" },
     { name = "matplotlib" },
@@ -395,6 +396,7 @@ requires-dist = [
     { name = "grandalf", specifier = ">=0.8" },
     { name = "langchain", specifier = ">=0.3.25" },
     { name = "langchain-openai", specifier = ">=0.3.18" },
+    { name = "langgraph", specifier = ">=0.4.7" },
     { name = "langgraph-checkpoint-sqlite", specifier = ">=2.0.10" },
     { name = "langgraph-swarm", specifier = ">=0.0.11" },
     { name = "matplotlib", specifier = ">=3.10.3" },
