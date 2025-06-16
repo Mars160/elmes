@@ -39,13 +39,3 @@ def load_conf(path: Path):
     if CONFIG.evaluation is not None:
         if CONFIG.evaluation.name is None:
             CONFIG.evaluation.name = path.stem
-
-
-
-# load_conf(Path(__file__).parent.parent.parent / "guided_teaching.yaml")
-
-if __name__ == "__main__":
-    # CONFIG = ElmesConfig()
-    format = CONFIG.evaluation.format_to_pydantic()  # type: ignore
-    for name, field in format.model_json_schema().items():
-        print(name, field)  # type:
