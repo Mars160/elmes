@@ -40,7 +40,7 @@ def _init_agent_from_dict(
                 if item.name == agent_name:
                     item = AIMessage(content=content, type="ai")  # type: ignore
                 else:
-                    item = HumanMessage(content=content, type="human")
+                    item = HumanMessage(content=content, type="human")  # type: ignore
                 n_m.append(item)
             if len(n_m) > ac.memory.keep_turns * 2 + 1:
                 n_m = n_m[-ac.memory.keep_turns * 2 - 1 :]

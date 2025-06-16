@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Dict, Any, Literal, Optional, List, Annotated, Tuple
+from typing import Dict, Any, Literal, Optional, List, Annotated, Tuple, Final
 from pydantic import BaseModel, ConfigDict, Field, create_model
 from typing_extensions import TypedDict
 from langgraph.graph.message import add_messages
@@ -61,7 +61,7 @@ class AgentMemoryConfig(BaseModel):
 
 class AgentConfig(BaseModel):
     model: str
-    prompt: List[Prompt]
+    prompt: Final[List[Prompt]]
     memory: AgentMemoryConfig = AgentMemoryConfig(enable=True)
 
     checkpointer: Optional[Any] = None
@@ -69,7 +69,7 @@ class AgentConfig(BaseModel):
 
 # Task
 class TaskConfig(BaseModel):
-    start_prompt: Optional[Prompt] = None
+    start_prompt: Final[Optional[Prompt]] = None
     variables: List[Dict[str, str]] = []
 
 
