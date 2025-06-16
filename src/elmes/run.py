@@ -15,6 +15,8 @@ from elmes.entity import Prompt
 from elmes.model import init_model_map
 from elmes.utils import replace_prompt
 
+from tenacity import RetryError
+
 
 async def run(workers_num: int = CONFIG.globals.concurrency):
     sem = asyncio.Semaphore(workers_num)
@@ -56,6 +58,12 @@ async def run(workers_num: int = CONFIG.globals.concurrency):
                     f"Recursion limit {CONFIG.globals.recursion_limit} reached for one task"
                 )
                 return
+            except RetryError as e:
+                exception = e.last_attempt.exception()
+                if exception is not None:
+                    raise exception
+                else:
+                    raise ValueError("Retry error occurred without exception")
 
     tasks = []
     for agent, prompt in agents:
