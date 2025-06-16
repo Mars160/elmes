@@ -33,7 +33,9 @@ def parse_yaml(path: Path) -> Dict[str, Any]:
 
 
 def replace_prompt(
-    prompt: Union[List[Dict[str, str]], List[Prompt], Dict[str, str], List[Prompt]],
+    prompt: Union[
+        List[Dict[str, str]], List[Prompt], Dict[str, str], List[Prompt], Prompt
+    ],
     prompt_map: Dict[str, str],
 ) -> Union[List[Dict[str, str]], List[Prompt]]:
     result = []
