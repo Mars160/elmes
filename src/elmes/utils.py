@@ -9,6 +9,7 @@ import re
 
 think_regex = re.compile(r"<think>(.*?)</think>", re.DOTALL)
 
+
 def remove_think(prompt: str | list[str | dict[str, str]] | dict[str, str]):
     if isinstance(prompt, str):
         return think_regex.sub("", prompt)
@@ -22,6 +23,7 @@ def remove_think(prompt: str | list[str | dict[str, str]] | dict[str, str]):
     else:
         raise ValueError("Invalid type")
 
+
 def parse_yaml(path: Path) -> Dict[str, Any]:  # type: ignore
     with open(path, "r") as f:
         t = f.read()
@@ -29,10 +31,9 @@ def parse_yaml(path: Path) -> Dict[str, Any]:  # type: ignore
             return d
 
 
-PromptType = Union[Dict[str, str], Prompt]
-
 def replace_prompt(
-    prompt: Union[List[PromptType], PromptType], prompt_map: Dict[str, str]
+    prompt: Union[List[Dict[str, str]], List[Prompt], Dict[str, str], List[Prompt]],
+    prompt_map: Dict[str, str],
 ) -> Union[List[Dict[str, str]], List[Prompt]]:
     result = []
     if isinstance(prompt, List):

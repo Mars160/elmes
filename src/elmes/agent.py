@@ -21,7 +21,7 @@ def _init_agent_from_dict(
     dynamic_prompt_map: Optional[Dict[str, str]] = None,
 ) -> Callable[..., Awaitable[Dict[str, List[Any]]]]:
     if dynamic_prompt_map is not None:
-        ac_prompt = replace_prompt(ac.prompt, dynamic_prompt_map)  # type: ignore
+        ac_prompt = replace_prompt(ac.prompt, dynamic_prompt_map)
     else:
         ac_prompt = copy.deepcopy(ac.prompt)  # fix shallow copy导致的数据错误
     m = model_map[ac.model]
@@ -34,7 +34,6 @@ def _init_agent_from_dict(
         if state["messages"] == []:
             n_m = ac_prompt
         else:
-            # n_m = state["messages"]
             n_m = []
             for item in state["messages"]:
                 content = remove_think(item.content)
