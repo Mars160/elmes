@@ -24,11 +24,12 @@ def remove_think(prompt: str | list[str | dict[str, str]] | dict[str, str]):
         raise ValueError("Invalid type")
 
 
-def parse_yaml(path: Path) -> Dict[str, Any]:  # type: ignore
+def parse_yaml(path: Path) -> Dict[str, Any]:
     with open(path, "r") as f:
         t = f.read()
         for d in yaml.safe_load_all(t):
             return d
+        return {}
 
 
 def replace_prompt(
