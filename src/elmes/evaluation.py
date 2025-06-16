@@ -16,11 +16,14 @@ def generate_evaluation_tool() -> BaseTool:
     This function is a placeholder and should be implemented with actual logic.
     """
 
+    if CONFIG.evaluation is None:
+        raise ValueError("Evaluation configuration not found.")
+
     @tool(
         name_or_callable="save_result_to_database",
         description="Save the evaluation results to a database.",
         return_direct=True,
-        args_schema=CONFIG.evaluation.format_to_pydantic(),  # type: ignore
+        args_schema=CONFIG.evaluation.format_to_pydantic(),
     )
     def save_to_db(**kwargs):
         """
@@ -32,7 +35,7 @@ def generate_evaluation_tool() -> BaseTool:
             kwargs[k] = v
         return kwargs
 
-    return save_to_db  # type: ignore
+    return save_to_db
 
 
 @retry(
