@@ -40,13 +40,15 @@ async def run(workers_num: int = CONFIG.globals.concurrency):
         agent: CompiledStateGraph, prompt: Optional[Prompt | Dict[str, str]]
     ):
         if isinstance(prompt, Prompt):
-            prompt = prompt.model_dump()
+            n_prompt = prompt.model_dump()
         elif prompt is None:
-            prompt = []  # type: ignore
+            n_prompt = []
+        else:
+            n_prompt = prompt
         async with sem:
             try:
                 await agent.ainvoke(
-                    {"messages": prompt},
+                    {"messages": n_prompt},
                     {
                         "configurable": {"thread_id": "0"},
                         "recursion_limit": CONFIG.globals.recursion_limit,
