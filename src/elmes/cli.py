@@ -142,16 +142,19 @@ def eval_logic(avg: bool):
     eval_path = input_dir / "eval"
     eval_path.mkdir(exist_ok=True)
 
+    sem = asyncio.Semaphore(CONFIG.globals.concurrency)
+
     async def eval_task(model, file: Path) -> Dict[str, Any]:
-        ef = ExportFormat.from_json_file(file)
-        try:
-            eval = await evaluate(model, ef)
-            with open(eval_path / file.name, "w", encoding="utf8") as f:
-                json.dump(eval, f, ensure_ascii=False, indent=4)
-            return eval
-        except RetryError as e:
-            print(f"Error evaluating {file}", e.last_attempt.exception())
-            return {}
+        async with sem:
+            ef = ExportFormat.from_json_file(file)
+            try:
+                eval = await evaluate(model, ef)
+                with open(eval_path / file.name, "w", encoding="utf8") as f:
+                    json.dump(eval, f, ensure_ascii=False, indent=4)
+                return eval
+            except RetryError as e:
+                print(f"Error evaluating {file}", e.last_attempt.exception())
+                return {}
 
     async def main():
         assert CONFIG.evaluation
@@ -322,6 +325,15 @@ def visualize_logic(input_dir: str, x_rotation: int):
     num_vars = len(keys)
     angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
     angles += angles[:1]  # 闭合图形
+
+    # 计算所有数值的最小值
+    all_scores = [values[k] for k in keys]
+    min_value = min([min(score_list) for score_list in all_scores])
+
+    # 设置雷达图的最小值原点
+    min_value -= 1  # 最小值减去 1
+
+    # 绘制雷达图
     fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
 
     for idx, model in enumerate(models):
@@ -329,6 +341,9 @@ def visualize_logic(input_dir: str, x_rotation: int):
         scores += scores[:1]  # 闭合图形
         ax.plot(angles, scores, label=model, linewidth=2)
         ax.fill(angles, scores, alpha=0.1)
+
+    # 调整雷达图的半径范围，确保从 (min_value - 1) 开始
+    ax.set_ylim(min_value, max([max(score_list) for score_list in all_scores]) + 1)
 
     # 设置标签和样式
     ax.set_thetagrids(np.degrees(angles[:-1]), keys)  # type: ignore
