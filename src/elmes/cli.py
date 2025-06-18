@@ -246,7 +246,7 @@ def eval_logic(avg: bool):
 @click.option(
     "--x-rotation",
     type=int,
-    default=45,
+    default=30,
 )
 def visualize(input_dir: str, x_rotation: int):
     visualize_logic(input_dir, x_rotation)
@@ -304,19 +304,30 @@ def visualize_logic(input_dir: str, x_rotation: int):
             values[k].append(data[k])
 
     # 构建 DataFrame
-    df_dict = {task_name: models}
+    df_dict = {"": models}
     for k in keys:
         df_dict[k] = values[k]
 
     df = pd.DataFrame(df_dict)
 
+    print(df)
+
     # ==== ✅ 自适应画布宽度 ====
     fig_width = max(8, len(df) * 0.8)  # 每个模型 0.8 英寸，最小宽度为 8
     fig, ax = plt.subplots(figsize=(fig_width, 6))
 
-    df.set_index(task_name).plot(kind="bar", stacked=True, ax=ax)
-    ax.set_xticklabels(df[task_name], rotation=x_rotation)
+    df.set_index("").plot(kind="bar", stacked=True, ax=ax)
+    ax.set_xticklabels(df[""], rotation=x_rotation)
     ax.set_title(f"{task_name}")
+
+    # ✅ 设置图例位置到图表下方，打散为多列
+    ax.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.15),
+        ncol=min(len(keys), 5),
+        frameon=False,
+    )
+
     plt.tight_layout()
     plt.savefig(input_path / f"stack_{task_name}.png", dpi=300)
 
