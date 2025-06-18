@@ -342,8 +342,8 @@ def visualize_logic(input_dir: str, x_rotation: int):
 
     # ✅ 设置图例位置到图表下方，打散为多列
     ax.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, -0.15),
+        loc="lower center",
+        bbox_to_anchor=(0.5, 1.1),
         ncol=min(len(keys), 5),
         frameon=False,
     )
