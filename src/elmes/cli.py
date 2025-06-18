@@ -253,6 +253,28 @@ def visualize(input_dir: str, x_rotation: int):
 
 
 def visualize_logic(input_dir: str, x_rotation: int):
+    color_palette = [
+        "#1f77b4",
+        "#aec7e8",
+        "#ff7f0e",
+        "#ffbb78",
+        "#2ca02c",
+        "#98df8a",
+        "#d62728",
+        "#ff9896",
+        "#9467bd",
+        "#c5b0d5",
+        "#8c564b",
+        "#c49c94",
+        "#e377c2",
+        "#f7b6d2",
+        "#7f7f7f",
+        "#c7c7c7",
+        "#bcbd22",
+        "#dbdb8d",
+        "#17becf",
+        "#9edae5",
+    ]
     import pandas as pd
     import matplotlib.pyplot as plt
     import numpy as np
@@ -310,13 +332,11 @@ def visualize_logic(input_dir: str, x_rotation: int):
 
     df = pd.DataFrame(df_dict)
 
-    print(df)
-
     # ==== ✅ 自适应画布宽度 ====
     fig_width = max(8, len(df) * 0.8)  # 每个模型 0.8 英寸，最小宽度为 8
     fig, ax = plt.subplots(figsize=(fig_width, 6))
 
-    df.set_index("").plot(kind="bar", stacked=True, ax=ax)
+    df.set_index("").plot(kind="bar", stacked=True, ax=ax, color=color_palette)
     ax.set_xticklabels(df[""], rotation=x_rotation)
     ax.set_title(f"{task_name}")
 
@@ -350,7 +370,13 @@ def visualize_logic(input_dir: str, x_rotation: int):
     for idx, model in enumerate(models):
         scores = [values[k][idx] for k in keys]
         scores += scores[:1]  # 闭合图形
-        ax.plot(angles, scores, label=model, linewidth=2)
+        ax.plot(
+            angles,
+            scores,
+            label=model,
+            linewidth=2,
+            color=color_palette[idx % len(color_palette)],
+        )
         ax.fill(angles, scores, alpha=0.1)
 
     # 调整雷达图的半径范围，确保从 (min_value - 1) 开始
