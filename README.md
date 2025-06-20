@@ -154,10 +154,6 @@ evaluation:
 
 欢迎提交 Pull Request 或创建 Issue 来改进 ELMES。
 
-## 许可证
-
-[LICENSE] 
-
 ## 配置文件详解
 
 以下各段落基于 `config.yaml.example` 展开，帮助你快速理解和定制自己的任务。
