@@ -24,7 +24,7 @@ pip install elmes
 2. 运行 ELMES 命令行工具
 
 ```bash
-elmes run --config config.yaml
+elmes pipeline --config config.yaml
 ```
 
 ## 配置示例
