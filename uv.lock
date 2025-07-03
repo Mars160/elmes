@@ -380,9 +380,7 @@ dependencies = [
     { name = "langchain-openai" },
     { name = "langgraph" },
     { name = "langgraph-checkpoint-sqlite" },
-    { name = "langgraph-swarm" },
     { name = "matplotlib" },
-    { name = "openai" },
     { name = "pandas" },
     { name = "polyfactory" },
     { name = "pyppeteer" },
@@ -407,9 +405,7 @@ requires-dist = [
     { name = "langchain-openai", specifier = ">=0.3.18" },
     { name = "langgraph", specifier = ">=0.4.7" },
     { name = "langgraph-checkpoint-sqlite", specifier = ">=2.0.10" },
-    { name = "langgraph-swarm", specifier = ">=0.0.11" },
     { name = "matplotlib", specifier = ">=3.10.3" },
-    { name = "openai", specifier = ">=1.82.0" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "polyfactory", specifier = ">=2.21.0" },
     { name = "pyppeteer", specifier = ">=2.0.0" },
@@ -1050,19 +1046,6 @@ dependencies = [
 sdist = { url = "https://mirrors.ustc.edu.cn/pypi/packages/c1/dd/c074adf91d2fe67f00dc3be4348119f40a9d0ead9e55c958f81492c522c0/langgraph_sdk-0.1.70.tar.gz", hash = "sha256:cc65ec33bcdf8c7008d43da2d2b0bc1dd09f98d21a7f636828d9379535069cf9", size = 71530, upload-time = "2025-05-21T22:23:22.502Z" }
 wheels = [
     { url = "https://mirrors.ustc.edu.cn/pypi/packages/8c/77/b0930ca5d54ef91e2bdb37e0f7dbeda1923e1e0b5b71ab3af35c103c2e39/langgraph_sdk-0.1.70-py3-none-any.whl", hash = "sha256:47f2b04a964f40a610c1636b387ea52f961ce7a233afc21d3103e5faac8ca1e5", size = 49986, upload-time = "2025-05-21T22:23:21.377Z" },
-]
-
-[[package]]
-name = "langgraph-swarm"
-version = "0.0.11"
-source = { registry = "https://mirrors.ustc.edu.cn/pypi/simple" }
-dependencies = [
-    { name = "langchain-core" },
-    { name = "langgraph" },
-]
-sdist = { url = "https://mirrors.ustc.edu.cn/pypi/packages/8f/36/49afc8dc81bf877956d5f3d0e9980aca1f83884a81ad200302a84a11ad64/langgraph_swarm-0.0.11.tar.gz", hash = "sha256:8aafc47c849c0e4eb6ea5cdc7791977be67e11b319ff91f8a6ccef0ded1984a4", size = 11118, upload-time = "2025-04-30T15:59:28.525Z" }
-wheels = [
-    { url = "https://mirrors.ustc.edu.cn/pypi/packages/fe/97/135f4372e3e9bf74fc4d12151758d25970a0e842716c144e348aac12af1b/langgraph_swarm-0.0.11-py3-none-any.whl", hash = "sha256:c99a92a4d383a2f5a4db40952a37bfdef0c41b44288fef56b0214056eb6801a0", size = 9458, upload-time = "2025-04-30T15:59:27.646Z" },
 ]
 
 [[package]]

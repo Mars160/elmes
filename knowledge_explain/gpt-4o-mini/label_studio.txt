@@ -1,0 +1,53 @@
+<View>
+  <Style>
+    .container {
+      display: flex;
+      justify-content: space-between;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 20px 0 rgba(0, 0, 0, 0.1);
+      max-width: 800px;
+    }
+
+    .border {
+      border-style: solid;
+    }
+
+    .text-block {
+      flex: 1;
+      margin-right: 20px;
+    }
+
+    .assessment-items-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .assessment-item {
+      background-color: rgba(44, 62, 80, 0.6);
+      padding: 1px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 3px 10px 0 rgba(0, 0, 0, 0.1);
+      color: #ffffff;
+      word-wrap: break-word;
+    }
+  </Style>
+  <View className="container">
+    <View className="text-block">
+      <Paragraphs name="dialogue" value="$messages" layout="dialogue" nameKey="role" textKey="content" />
+    </View>
+    <View className="assessment-item-container">
+      <Header value="角色贴合性" size="8"/><View className="assessment-item"><Rating name="角色贴合性" maxRating="5" toName="dialogue" /></View>
+      <Header value="情感支持性" size="8"/><View className="assessment-item"><Rating name="情感支持性" maxRating="5" toName="dialogue" /></View>
+      <Header value="知识点掌握程度" size="8"/><View className="assessment-item"><Rating name="知识点掌握程度" maxRating="5" toName="dialogue" /></View>
+      <Header value="教学方法合理性" size="8"/><View className="assessment-item"><Rating name="教学方法合理性" maxRating="5" toName="dialogue" /></View>
+      <Header value="内容设计合理性" size="8"/><View className="assessment-item"><Rating name="内容设计合理性" maxRating="5" toName="dialogue" /></View>
+      <Header value="用户特征呼应" size="8"/><View className="assessment-item"><Rating name="用户特征呼应" maxRating="5" toName="dialogue" /></View>
+
+    </View>
+  </View>
+</View>

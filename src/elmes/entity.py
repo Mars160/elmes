@@ -7,6 +7,7 @@ from langgraph.graph.message import add_messages
 from pathlib import Path
 from aiosqlite import Connection
 from polyfactory.factories.pydantic_factory import ModelFactory
+import math
 
 
 # Common
@@ -141,6 +142,8 @@ class FormatField(BaseModel):
     type: Literal["str", "int", "float", "bool", "dict"]
     description: str
     items: List["FormatField"] = []
+    # min: float | int | None = None
+    max: float | int | None = None
 
 
 # Evaluation
@@ -190,6 +193,23 @@ class EvalConfig(BaseModel):
             if f.type == "dict":
                 nested_model = build_model_from_format(f.items, f.field)
                 return nested_model, Field(..., description=f.description)
+            if f.type == "int" or f.type == "float":
+                py_type = python_type_map[f.type]
+                # if f.min is None:
+                #     if f.max is None:
+                #         return py_type, Field(..., description=f.description)
+                #     else:
+                #         return py_type, Field(..., le=f.max, description=f.description)
+                # else:
+                #     if f.max is None:
+                #         return py_type, Field(..., ge=f.min, description=f.description)
+                #     else:
+                #         return py_type, Field(..., ge=f.min, le=f.max, description=f.description)
+
+                if f.max is None:
+                    return py_type, Field(..., description=f.description)
+                else:
+                    return py_type, Field(..., le=f.max, description=f.description)
             else:
                 py_type = python_type_map[f.type]
                 return py_type, Field(..., description=f.description)
