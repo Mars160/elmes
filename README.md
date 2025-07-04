@@ -293,13 +293,16 @@ ELMES 提供多个命令行工具，方便用户执行不同的操作：
 # 生成对话
 elmes generate --config config.yaml
 
-# 导出 JSON 格式对话
-elmes export-json --config config.yaml
+# 导出对话为 JSON
+elmes export json --config config.yaml
+
+# 导出 Label Studio 数据
+elmes export label-studio --config config.yaml
 
 # 评估对话结果
 elmes eval --config config.yaml
 
-# 完整流水线（生成+导出+评估，上述命令3合1）
+# 完整流水线（生成+导出JSON+评估，上述命令3合1）
 elmes pipeline --config config.yaml
 
 # 可视化评估结果
