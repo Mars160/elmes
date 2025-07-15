@@ -161,7 +161,7 @@ elmes draw --config config.yaml
 
 该命令会根据配置文件中的 `directions` 部分生成一个 Mermaid 流程图，并保存为 PNG 格式（与配置文件同名）。这对于理解复杂的代理交互流程和调试路由逻辑特别有帮助。
 
-![代理流程图示例](docs/config.png)
+![代理流程图示例](docs/assets/imgs/config.png)
 
 ## 贡献
 
