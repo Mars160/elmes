@@ -18,7 +18,9 @@ wheels/
 *.csv
 
 *.png
-!docs/*.png
+!docs/assets/**
+
+
 
 outputs/
 guided_teaching/
