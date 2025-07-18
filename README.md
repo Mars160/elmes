@@ -1,6 +1,8 @@
-# ELMES - Education Language Model Evaluation System
+[简体中文](./README.md) | [English](./README-en.md)
 
-ELMES (Education Language Model Evaluation System) 是一个 Python 框架，旨在为 LLM 不同场景下的各种任务提供代理编排和自动评估的功能。它采用模块化架构，基于 YAML 配置，可扩展的实体使得该框架适用于构建、配置和评估复杂的基于代理的工作流。
+# ELMES - Evaluating Large Language Models in Educational Scenarios 
+
+ELMES (Evaluating Large Language Models in Educational Scenarios) 是一个 Python 框架，旨在为 LLM 不同场景下的各种任务提供代理编排和自动评估的功能。它采用模块化架构，基于 YAML 配置，可扩展的实体使得该框架适用于构建、配置和评估复杂的基于代理的工作流。
 
 ## 主要特点
 
@@ -281,7 +283,7 @@ evaluation:
 ```
 
 - **tool 模式**：利用 OpenAI function-calling，保证输出 JSON 100% 合法。
-- **prompt 模式**：通过严格的占位符和正则抽取，兼容不支持 function-calling 的模型（如 Gemini）。
+- **prompt 模式**：通过严格的占位符和正则抽取，兼容不支持 function-calling 的模型或代理商。
 
 > 若 `evaluation` 块被省略，ELMES 将仅执行任务，跳过评估阶段。
 
@@ -314,4 +316,4 @@ elmes draw --config config.yaml
 
 ---
 
-通过以上配置，你可以 **零代码** 地组装出多 LLM 互动、自动化评测并持久化结果的完整流水线——这正是 ELMES 的核心价值所在。
+您可以在[这里](docs/scenes/zh-cn)找到我们为四个教学场景准备的文档
