@@ -26,6 +26,8 @@ outputs/
 guided_teaching/
 tests/
 
+label_studio.txt
+
 *.db
 *.sqlite
 *.bin
