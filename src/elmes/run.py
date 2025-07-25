@@ -1,6 +1,5 @@
 import asyncio
 
-from tkinter import NONE
 from typing import Dict, Optional
 
 from tqdm.asyncio import tqdm
@@ -32,7 +31,7 @@ async def run(workers_num: int = CONFIG.globals.concurrency):
             else:
                 start_prompt = CONFIG.tasks.start_prompt
         else:
-            start_prompt = NONE
+            start_prompt = None
         agent, _ = await apply_agent_direction(agent_map, task=task)
         agents.append((agent, start_prompt))
 

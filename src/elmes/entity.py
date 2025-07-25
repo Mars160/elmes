@@ -70,8 +70,16 @@ class AgentConfig(BaseModel):
 
 # Task
 class TaskConfig(BaseModel):
-    start_prompt: Final[Optional[Prompt]] = None
+    start_prompt: Optional[Prompt] = None
     variables: List[Dict[str, str]] = []
+
+    def model_post_init(self, __context):
+        object.__setattr__(self, "_frozen_start_prompt", True)
+
+    def __setattr__(self, name, value):
+        if getattr(self, f"_frozen_{name}", False) and name == "start_prompt":
+            raise AttributeError(f"{name} is const and cannot be modified")
+        super().__setattr__(name, value)
 
 
 # Elmes Context
