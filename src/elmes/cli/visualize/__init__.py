@@ -97,8 +97,10 @@ def visualize_logic(input_dir: str, x_rotation: int):
 
     df = pd.DataFrame(df_dict)
 
+    ncol = min(len(keys), 5)
+
     # ==== ✅ 自适应画布宽度 ====
-    fig_width = max(8, len(df) * 0.8)  # 每个模型 0.8 英寸，最小宽度为 8
+    fig_width = max(8, len(df) * 0.8, ncol * 2)  # 每个模型 0.8 英寸，最小宽度为 8
     fig, ax = plt.subplots(figsize=(fig_width, 6))
 
     df.set_index("").plot(kind="bar", stacked=True, ax=ax, color=color_palette)
@@ -109,7 +111,7 @@ def visualize_logic(input_dir: str, x_rotation: int):
     ax.legend(
         loc="lower center",
         bbox_to_anchor=(0.5, 1.1),
-        ncol=min(len(keys), 5),
+        ncol=ncol,
         frameon=False,
     )
 
