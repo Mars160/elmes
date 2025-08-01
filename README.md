@@ -1,6 +1,6 @@
 [简体中文](./README.md) | [English](./README-en.md)
 
-[论文][https://arxiv.org/abs/2507.22947]
+[论文](https://arxiv.org/abs/2507.22947)
 
 # ELMES - Evaluating Large Language Models in Educational Scenarios
 
