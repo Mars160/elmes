@@ -1,6 +1,8 @@
 [简体中文](./README.md) | [English](./README-en.md)
 
-# ELMES - Evaluating Large Language Models in Educational Scenarios 
+[论文][https://arxiv.org/abs/2507.22947]
+
+# ELMES - Evaluating Large Language Models in Educational Scenarios
 
 ELMES (Evaluating Large Language Models in Educational Scenarios) 是一个 Python 框架，旨在为 LLM 不同场景下的各种任务提供代理编排和自动评估的功能。它采用模块化架构，基于 YAML 配置，可扩展的实体使得该框架适用于构建、配置和评估复杂的基于代理的工作流。
 

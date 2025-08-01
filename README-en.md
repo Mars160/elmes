@@ -1,6 +1,8 @@
 [简体中文](./README.md) | [English](./README-en.md)
 
-# ELMES - Evaluating Large Language Models in Educational Scenarios 
+[Paper][https://arxiv.org/abs/2507.22947]
+
+# ELMES - Evaluating Large Language Models in Educational Scenarios
 
 ELMES (Evaluating Large Language Models in Educational Scenarios) is a Python framework designed to provide agent orchestration and automated evaluation for various tasks in different LLM scenarios. It features a modular architecture, YAML-based configuration, and extensible entities, making it suitable for building, configuring, and evaluating complex agent-based workflows.
 
@@ -316,4 +318,4 @@ elmes draw --config config.yaml
 
 ---
 
-You can find our documentation for the four teaching scenarios [here](docs/scenes/en/). 
+You can find our documentation for the four teaching scenarios [here](docs/scenes/en/).
