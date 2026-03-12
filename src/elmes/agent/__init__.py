@@ -1,5 +1,6 @@
 from diskcache import Cache
 from dataclasses import dataclass
+from typing import Generator, Any
 
 from elmes.client.interface import ClientInterface
 from elmes.graph.node import GraphNodeInterface
@@ -14,6 +15,7 @@ class MemoryEntry:
     query: str
     query_from: str
     output: str
+    reasoning: str | None = None
 
 
 class Agent(GraphNodeInterface):
@@ -30,7 +32,7 @@ class Agent(GraphNodeInterface):
 
         self.agent_config = agent_config
         self.client = client
-        self.logger = logging.getLogger(self.name + "-agent")
+        self.logger = logging.getLogger(f"{self.agent_id}_{self.name}_agent")
 
         self.cache = Cache(f"{memory_config.path}/{self.agent_id}")
 
@@ -59,21 +61,33 @@ class Agent(GraphNodeInterface):
         messages = self.agent_config.prompt + messages
         response = await self.client.generate(messages)
         if response is not None:
+            if "</think>" in response:
+                splits = response.split("</think>")
+                reasoning = splits[0]
+                response = splits[1]
+            else:
+                reasoning = None
             self.cache.push(
-                MemoryEntry(query=query, query_from=query_from, output=response)
+                MemoryEntry(
+                    query=query,
+                    query_from=query_from,
+                    output=response,
+                    reasoning=reasoning,
+                )
             )
         return response
 
-    async def export(self) -> list[Message]:
-        """导出对话历史和任务信息，供评估使用"""
-        history: list[Message] = []
+    def iter_history(self) -> Generator[Message, Any, None]:
+        """迭代器，按时间顺序返回对话历史"""
         for k in self.cache.iterkeys():
             memory_entry: MemoryEntry = self.cache[k]  # type: ignore
-            history.append(
-                Message(role=memory_entry.query_from, content=memory_entry.query)
+            yield Message(
+                role=self.name,
+                content=memory_entry.output,
+                reasoning=""
+                if memory_entry.reasoning is None
+                else memory_entry.reasoning,
             )
-            history.append(Message(role=self.name, content=memory_entry.output))
-        return history
 
     async def run(self, *args, **kwargs) -> str | None:
         """
