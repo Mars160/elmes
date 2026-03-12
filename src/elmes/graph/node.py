@@ -25,13 +25,3 @@ class EndNode(GraphNodeInterface):
 
     async def run(self, *args, **kwargs) -> str | None:
         return None
-
-
-class RouterNode(GraphNodeInterface, ABC):
-    def __init__(self, name: str):
-        super().__init__(name)
-
-    @abstractmethod
-    async def run(self, *args, **kwargs) -> str | None:
-        # Router节点的run方法不执行实际逻辑，只返回对应的路由信息
-        return None
