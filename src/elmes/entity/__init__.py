@@ -7,7 +7,8 @@ from langgraph.graph.message import add_messages
 from pathlib import Path
 from aiosqlite import Connection
 from polyfactory.factories.pydantic_factory import ModelFactory
-import math
+
+from elmes.entity.message import Message
 
 
 # Common
@@ -16,7 +17,7 @@ class State(TypedDict):
 
 
 # Memory
-class Memory(BaseModel):
+class MemoryConfig(BaseModel):
     path: Path = Path(".")
 
 
@@ -44,11 +45,6 @@ class ModelConfig(BaseModel):
 
 
 # Agent
-class Prompt(BaseModel):
-    role: Optional[str]
-    content: str
-
-
 class SwitchConfig(BaseModel):
     swap_user_assistant: bool = True
 
@@ -62,7 +58,7 @@ class AgentMemoryConfig(BaseModel):
 
 class AgentConfig(BaseModel):
     model: str
-    prompt: Final[List[Prompt]]
+    prompt: Final[List[Message]]
     memory: AgentMemoryConfig = AgentMemoryConfig(enable=True)
 
     checkpointer: Optional[Any] = None
@@ -70,7 +66,7 @@ class AgentConfig(BaseModel):
 
 # Task
 class TaskConfig(BaseModel):
-    start_prompt: Optional[Prompt] = None
+    start_prompt: Optional[Message] = None
     variables: List[Dict[str, str]] = []
 
     def model_post_init(self, __context):
@@ -91,7 +87,7 @@ class ElmesContext(BaseModel):
 # ExportFormat
 class ExportFormat(BaseModel):
     task: Dict[str, str]
-    messages: List[Prompt] = []
+    messages: List[Message] = []
 
     @staticmethod
     def from_json_file(file_path: Path | str) -> "ExportFormat":
@@ -158,7 +154,7 @@ class FormatField(BaseModel):
 class EvalConfig(BaseModel):
     model: str
     name: Optional[str]
-    prompt: List[Prompt]
+    prompt: List[Message]
     format: List[FormatField]
     format_mode: Literal["tool", "prompt"] = "tool"
 
@@ -175,10 +171,10 @@ class EvalConfig(BaseModel):
 
         return MMF().build().json()
 
-    def get_prompts(self) -> Tuple[str, List[Prompt]]:
+    def get_prompts(self) -> Tuple[str, List[Message]]:
         """获取系统提示和其他提示词"""
         system_prompt = ""
-        other_prompt: List[Prompt] = []
+        other_prompt: List[Message] = []
         for p in self.prompt:
             if p.role == "system":
                 if system_prompt != "":
