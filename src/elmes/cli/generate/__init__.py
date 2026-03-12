@@ -1,3 +1,5 @@
+from elmes.config import ElmesConfig
+
 import click
 
 from pathlib import Path
@@ -10,11 +12,11 @@ def generate(config: str, debug: bool):
     from elmes.config import load_conf
 
     path = Path(config)
-    load_conf(path)
-    generate_logic()
+    config_obj = load_conf(path)
+    generate_logic(config_obj, debug)
 
 
-def generate_logic():
+def generate_logic(config: ElmesConfig, debug: bool):
     from elmes.run import run
     import asyncio
 

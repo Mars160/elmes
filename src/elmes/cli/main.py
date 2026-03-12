@@ -1,5 +1,4 @@
 import click
-from langchain.globals import set_debug
 
 from elmes.cli.generate import generate, generate_logic
 from elmes.cli.eval import eval, eval_logic
@@ -17,10 +16,9 @@ from elmes.cli.export.json_ import export_json_logic
 )
 @click.option("--debug", is_flag=True, help="Enable debug mode")
 def pipeline(config, debug=False):
-    set_debug(debug)
     from elmes.config import load_conf
 
-    load_conf(config)
+    config = load_conf(config)
     generate_logic()
     export_json_logic()
     eval_logic(avg=True)
