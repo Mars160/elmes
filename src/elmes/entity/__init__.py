@@ -1,47 +1,13 @@
 import json
 import re
-from typing import Dict, Any, Literal, Optional, List, Annotated, Tuple, Final
-from pydantic import BaseModel, ConfigDict, Field, create_model
-from typing_extensions import TypedDict
-from langgraph.graph.message import add_messages
+from typing import Dict, Any, Literal, Optional, List, Tuple, Final
+from pydantic import BaseModel, Field, create_model
 from pathlib import Path
-from aiosqlite import Connection
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from elmes.entity.message import Message
-
-
-# Common
-class State(TypedDict):
-    messages: Annotated[list, add_messages]
-
-
-# Memory
-class MemoryConfig(BaseModel):
-    path: Path = Path(".")
-
-
-# RetryConfig
-class RetryConfig(BaseModel):
-    attempt: int = 3
-    interval: int = 3
-
-
-# Global
-class GlobalConfig(BaseModel):
-    concurrency: int = 8
-    recursion_limit: int = 25
-    memory: Memory = Memory()
-    retry: RetryConfig = RetryConfig()
-
-
-# Model
-class ModelConfig(BaseModel):
-    api_base: Optional[str]
-    api_key: Optional[str]
-    kargs: Optional[Dict[str, Any]] = None
-    model: Optional[str]
-    type: str = "openai"
+from elmes.entity.globals import GlobalConfig
+from elmes.entity.model import ModelConfig
 
 
 # Agent
@@ -78,10 +44,10 @@ class TaskConfig(BaseModel):
         super().__setattr__(name, value)
 
 
-# Elmes Context
-class ElmesContext(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    conns: List[Connection] = []
+# # Elmes Context
+# class ElmesContext(BaseModel):
+#     model_config = ConfigDict(arbitrary_types_allowed=True)
+#     conns: List[Connection] = []
 
 
 # ExportFormat
@@ -238,4 +204,4 @@ class ElmesConfig(BaseModel):
     tasks: TaskConfig
     evaluation: Optional[EvalConfig] = None
 
-    context: ElmesContext = ElmesContext(conns=[])
+    # context: ElmesContext = ElmesContext(conns=[])
