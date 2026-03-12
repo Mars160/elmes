@@ -32,6 +32,10 @@ def load_conf(path: Path) -> ElmesConfig:
         if "memory" not in n_data["globals"]:
             n_data["globals"]["memory"] = {}
         n_data["globals"]["memory"]["path"] = path.parent / path.stem
+    models = n_data.get("models", {})
+    for model_name, model_config in models.items():
+        if model_config.get("name", None) is None:
+            model_config["name"] = model_name
     CONFIG = ElmesConfig(**n_data)
     if CONFIG.evaluation is not None:
         if CONFIG.evaluation.name is None:
