@@ -8,4 +8,5 @@ class ModelConfig(BaseModel):
     api_key: Optional[str]
     kargs: Optional[Dict[str, Any]] = None
     model: Optional[str]
+    name: str
     type: str = "openai"

@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Dict, Any, Literal, Optional, List, Tuple, Final
+from typing import Dict, Literal, Optional, List, Tuple
 from pydantic import BaseModel, Field, create_model
 from pathlib import Path
 from polyfactory.factories.pydantic_factory import ModelFactory
@@ -8,26 +8,7 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from elmes.entity.message import Message
 from elmes.entity.globals import GlobalConfig
 from elmes.entity.model import ModelConfig
-
-
-# Agent
-class SwitchConfig(BaseModel):
-    swap_user_assistant: bool = True
-
-
-class AgentMemoryConfig(BaseModel):
-    enable: bool = True
-    id: Optional[str] = None
-    keep_turns: int = 3
-    # when_switch: SwitchConfig = SwitchConfig()
-
-
-class AgentConfig(BaseModel):
-    model: str
-    prompt: Final[List[Message]]
-    memory: AgentMemoryConfig = AgentMemoryConfig(enable=True)
-
-    checkpointer: Optional[Any] = None
+from elmes.entity.agent import AgentConfig
 
 
 # Task
