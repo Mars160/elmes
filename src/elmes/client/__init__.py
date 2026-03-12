@@ -13,14 +13,12 @@ from elmes.entity.message import Message
 import logging
 
 
-class ClientInterface(ABC):
-    def __init__(
-        self, model_config: ModelConfig, model_name: str, retry_config: RetryConfig
-    ):
+class Client(ABC):
+    def __init__(self, model_config: ModelConfig, retry_config: RetryConfig):
         self.model_config = model_config
-        self.model_name = model_name
+        self.model_name = model_config.name
         self.retry_config = retry_config
-        self.logger = logging.getLogger(self.model_name + "-client")
+        self.logger = logging.getLogger(self.model_config.name + "-client")
 
         kargs_str = (
             dumps(model_config.kargs, sort_keys=True) if model_config.kargs else ""
@@ -29,6 +27,18 @@ class ClientInterface(ABC):
         self.cache_key = md5(cache_key.encode()).hexdigest()
 
         self.cache = Cache(f".elmes-cache/client/{self.model_config.model}")
+
+    @staticmethod
+    def from_model_config(
+        model_config: ModelConfig, retry_config: RetryConfig
+    ) -> "Client":
+        """根据ModelConfig中的model字段动态选择Client实现"""
+        if model_config.type == "openai":
+            from elmes.client.openai import OpenAIClient
+
+            return OpenAIClient(model_config, retry_config)
+        else:
+            raise ValueError(f"Unsupported model: {model_config.model}")
 
     @abstractmethod
     async def _generate(self, messages: list[Message]) -> str:

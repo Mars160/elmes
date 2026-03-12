@@ -3,16 +3,15 @@ from typing import Type, Optional, Dict, Any
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
-from elmes.client.interface import ClientInterface
-from elmes.entity import ModelConfig, RetryConfig
+from elmes.client import Client
+from elmes.entity import ModelConfig
+from elmes.entity.globals import RetryConfig
 from elmes.entity.message import Message
 
 
-class OpenAIClient(ClientInterface):
-    def __init__(
-        self, model_config: ModelConfig, model_name: str, retry_config: RetryConfig
-    ):
-        super().__init__(model_config, model_name, retry_config)
+class OpenAIClient(Client):
+    def __init__(self, model_config: ModelConfig, retry_config: RetryConfig):
+        super().__init__(model_config, retry_config)
         self.client = AsyncOpenAI(
             api_key=model_config.api_key,
             base_url=model_config.api_base,
