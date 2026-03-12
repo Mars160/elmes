@@ -5,25 +5,22 @@ description = "Education Language Model Evaluation System"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "anthropic>=0.52.0",
     "click>=8.2.1",
-    "grandalf>=0.8",
-    "langchain>=0.3.25",
-    "langchain-openai>=0.3.18",
-    "langgraph>=0.4.7",
-    "langgraph-checkpoint-sqlite>=2.0.10",
+    "diskcache>=5.6.3",
     "matplotlib>=3.10.3",
     "pandas>=2.2.3",
     "polyfactory>=2.21.0",
-    "pyppeteer>=2.0.0",
-    "python-dotenv>=1.1.0",
     "pyyaml>=6.0.2",
-    "requests>=2.32.3",
-    "tenacity>=9.1.2",
+    "tenacity>=9.1.4",
 ]
 
 [project.scripts]
 elmes = "elmes.cli.main:main"
+
+[project.optional-dependencies]
+openai = [
+    "openai>=2.26.0",
+]
 
 [build-system]
 requires = ["hatchling"]
