@@ -10,7 +10,7 @@ START = "START"
 
 
 class Graph(GraphNodeInterface):
-    def __init__(self):
+    def __init__(self, recursion_limit: int = 40):
         self.nodes: dict[str, Agent | None | RouterNode | EndNode | StartNode] = {
             END: EndNode(END),
             START: StartNode(START),
@@ -22,6 +22,7 @@ class Graph(GraphNodeInterface):
         self._checked = False
         self._all_nodes_not_none = False
         self._node_id_trace: list[str] = []  # 记录node_id的访问顺序，便于导出
+        self.call_limit = recursion_limit
 
     def add_node(self, node_id: str):
         assert not self._checked, "Cannot add nodes after the graph has been checked."
@@ -155,7 +156,7 @@ class Graph(GraphNodeInterface):
             "All nodes must be replaced with instances before running."
         )
         current_node_id: str = self.directions[START]  # pyright: ignore[reportAssignmentType]
-        while current_node_id != END:
+        while current_node_id != END and self.call_limit > 0:
             current_node = self.nodes[current_node_id]
             if isinstance(current_node, RouterNode):
                 next_node_id = await current_node.run(*args, **kwargs)  # pyright: ignore[reportOptionalMemberAccess]
@@ -169,6 +170,7 @@ class Graph(GraphNodeInterface):
                 current_node_id = next_node_id
                 continue
             elif isinstance(current_node, Agent):
+                self.call_limit -= 1
                 self._node_id_trace.append(current_node_id)
                 response = await current_node.run(*args, **kwargs)
                 # 清空args和kwargs，确保每个节点的输入独立
@@ -210,17 +212,20 @@ class Graph(GraphNodeInterface):
         cloned_graph = Graph()
         cloned_graph.nodes = self.nodes.copy()  # 浅复制节点字典，节点实例保持不变
         cloned_graph.directions = self.directions.copy()  # 浅复制方向字典
-        cloned_graph.router_directions = {
-            k: v.copy() for k, v in self.router_directions.items()
-        }  # 深复制
+        cloned_graph.router_directions = (
+            self.router_directions.copy()
+        )  # 浅复制路由方向字典
         cloned_graph._checked = self._checked  # 复制检查状态
         cloned_graph._all_nodes_not_none = self._all_nodes_not_none  # 复制节点替换状态
         return cloned_graph
 
     @staticmethod
-    def from_direction_config(directions: list[str]) -> "Graph":
+    def from_direction_config(
+        directions: list[str],
+    ) -> tuple["Graph", dict[str, RouterNode]]:
         """根据给定的方向列表构建图，方向列表的格式为 ["START->A", "A->B", "B->END"]"""
         graph = Graph()
+        router_nodes = {}
         for direction in directions:
             start_node_id, end_node_id = direction.split("->")
             start_node_id, end_node_id = start_node_id.strip(), end_node_id.strip()
@@ -248,6 +253,7 @@ class Graph(GraphNodeInterface):
                 router_node_instance: RouterNode = eval(
                     f"RouterNode.router_table[router_node_id]({router_node_args_str})"
                 )
+                router_nodes[router_node_id] = router_node_instance
                 graph.add_conditional_edges(
                     start_node_id, router_node_id, router_node_instance.available_ends
                 )
@@ -255,11 +261,11 @@ class Graph(GraphNodeInterface):
                 graph.add_node(end_node_id)
                 graph.add_edge(start_node_id, end_node_id)
         graph.check()
-        return graph
+        return graph, router_nodes
 
 
 if __name__ == "__main__":
-    graph = Graph.from_direction_config(
+    graph, router_nodes = Graph.from_direction_config(
         [
             "START -> A",
             "A -> router:any_keyword_route(keywords=['hello', 'hi'], exists_to='GREET_AGENT', else_to=END)",
@@ -268,3 +274,4 @@ if __name__ == "__main__":
     )
     print(graph.directions)
     print(graph.router_directions)
+    print(router_nodes)
