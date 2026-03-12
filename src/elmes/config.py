@@ -5,15 +5,12 @@ from typing import Dict, Any
 
 import yaml
 
-CONFIG: ElmesConfig
 
-
-def load_conf(path: Path):
+def load_conf(path: Path) -> ElmesConfig:
     if isinstance(path, str):
         path = Path(path)
     if not path.exists():
-        return
-    global CONFIG
+        raise FileNotFoundError("Config file not found.")
     data: Dict[str, Dict[str, Any]] = {}
     try:
         with open(path, "r", encoding="utf8") as f:
@@ -39,3 +36,4 @@ def load_conf(path: Path):
     if CONFIG.evaluation is not None:
         if CONFIG.evaluation.name is None:
             CONFIG.evaluation.name = path.stem
+    return CONFIG

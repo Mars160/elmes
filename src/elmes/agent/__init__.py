@@ -4,8 +4,9 @@ from typing import Generator, Any
 
 from elmes.client.interface import ClientInterface
 from elmes.graph.node import GraphNodeInterface
-from elmes.entity import AgentConfig, MemoryConfig
 from elmes.entity.message import Message
+from elmes.entity.agent import AgentConfig
+from elmes.entity.globals import MemoryConfig
 
 import logging
 
@@ -84,9 +85,7 @@ class Agent(GraphNodeInterface):
             yield Message(
                 role=self.name,
                 content=memory_entry.output,
-                reasoning=""
-                if memory_entry.reasoning is None
-                else memory_entry.reasoning,
+                reasoning=memory_entry.reasoning,
             )
 
     async def run(self, *args, **kwargs) -> str | None:
