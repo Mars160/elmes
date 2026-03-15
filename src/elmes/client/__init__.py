@@ -8,7 +8,11 @@ from json import dumps
 
 from elmes.entity.model import ModelConfig
 from elmes.entity.globals import RetryConfig
-from elmes.entity.message import Message
+from elmes.entity.message import (
+    InputMessage,
+    StructuredGeneratedMessage,
+    GeneratedMessage,
+)
 
 import logging
 
@@ -41,16 +45,16 @@ class Client(ABC):
             raise ValueError(f"Unsupported model: {model_config.model}")
 
     @abstractmethod
-    async def _generate(self, messages: list[Message]) -> str:
+    async def _generate(self, messages: list[InputMessage]) -> GeneratedMessage:
         pass
 
     @abstractmethod
     async def _generate_structured(
-        self, messages: list[Message], response_model: Type[BaseModel]
-    ) -> BaseModel:
+        self, messages: list[InputMessage], response_model: Type[BaseModel]
+    ) -> StructuredGeneratedMessage:
         pass
 
-    async def generate(self, messages: list[Message]) -> str | None:
+    async def generate(self, messages: list[InputMessage]) -> GeneratedMessage:
         """封装了重试逻辑的公开接口"""
         messages_str = dumps([{"role": m.role, "content": m.content} for m in messages])
         cache_key = f"{self.cache_key}_{md5(messages_str.encode()).hexdigest()}"
@@ -71,10 +75,11 @@ class Client(ABC):
             self.logger.warning(
                 f"Attempt {attempt.retry_state.attempt_number} failed. Retrying..."
             )
+        raise RuntimeError("Failed to generate response after retries.")
 
     async def generate_structured(
-        self, messages: list[Message], response_model: Type[BaseModel]
-    ) -> BaseModel | None:
+        self, messages: list[InputMessage], response_model: Type[BaseModel]
+    ) -> StructuredGeneratedMessage:
         """结构化生成的重试封装"""
         messages_str = dumps([{"role": m.role, "content": m.content} for m in messages])
         cache_key = f"struct_{self.cache_key}_{md5(messages_str.encode()).hexdigest()}"
@@ -93,3 +98,4 @@ class Client(ABC):
             self.logger.warning(
                 f"Attempt {attempt.retry_state.attempt_number} failed. Retrying..."
             )
+        raise RuntimeError("Failed to generate structured response after retries.")

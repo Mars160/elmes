@@ -1,12 +1,19 @@
 from typing import Type, Optional, Dict, Any
 
 from openai import AsyncOpenAI
+from openai.types.chat import ChatCompletion
 from pydantic import BaseModel
 
 from elmes.client import Client
 from elmes.entity import ModelConfig
 from elmes.entity.globals import RetryConfig
-from elmes.entity.message import Message
+from elmes.entity.message import (
+    InputMessage,
+    GeneratedMessage,
+    ToolCall,
+    ToolCallContent,
+    StructuredGeneratedMessage,
+)
 
 
 class OpenAIClient(Client):
@@ -17,7 +24,7 @@ class OpenAIClient(Client):
             base_url=model_config.api_base,
         )
 
-    async def _generate(self, messages: list[Message]) -> str:
+    async def _generate(self, messages: list[InputMessage]) -> GeneratedMessage:
         openai_messages = [
             {"role": msg.role, "content": msg.content} for msg in messages
         ]
@@ -26,19 +33,43 @@ class OpenAIClient(Client):
         if kargs is None:
             kargs = {}
 
-        response = await self.client.chat.completions.create(
+        response: ChatCompletion = await self.client.chat.completions.create(
             model=self.model_config.model,  # pyright: ignore[reportArgumentType]
             messages=openai_messages,  # pyright: ignore[reportArgumentType]
             **kargs,
         )  # type: ignore
 
-        content = response.choices[0].message.content
-        assert content is not None, "Content is None"
-        return content
+        assert response.choices and len(response.choices) > 0, (
+            "No choices returned from OpenAI"
+        )
+
+        if (
+            response.choices[0].message.tool_calls is not None
+            and len(response.choices[0].message.tool_calls) > 0
+        ):
+            tool_calls = []
+            for tool_call in response.choices[0].message.tool_calls:
+                tool_calls.append(
+                    ToolCall(
+                        id=tool_call.id,
+                        function=ToolCallContent(
+                            name=tool_call.function.name,  # pyright: ignore[reportAttributeAccessIssue]
+                            arguments=tool_call.function.arguments,  # pyright: ignore[reportAttributeAccessIssue]
+                        ),
+                    )
+                )
+        else:
+            tool_calls = None
+
+        return GeneratedMessage(
+            role="assistant",
+            content=response.choices[0].message.content,
+            tool_calls=tool_calls,
+        )
 
     async def _generate_structured(
-        self, messages: list[Message], response_model: Type[BaseModel]
-    ) -> BaseModel:
+        self, messages: list[InputMessage], response_model: Type[BaseModel]
+    ) -> StructuredGeneratedMessage:
         openai_messages = [
             {"role": msg.role, "content": msg.content} for msg in messages
         ]
@@ -56,4 +87,4 @@ class OpenAIClient(Client):
 
         parsed = response.choices[0].message.parsed
         assert parsed is not None, "Parsed response is None"
-        return parsed
+        return StructuredGeneratedMessage(role="assistant", content=parsed)
