@@ -210,12 +210,19 @@ async def eval_logic(
     eval_dir = Path(output_path) if output_path else input_dir / "eval"
     eval_dir.mkdir(parents=True, exist_ok=True)
 
+    # 评测用的 judge model 信息
+    judge_model_info = {
+        "model_alias": eval_config.judge_model.name,
+        "model": eval_config.judge_model.model,
+    }
+
     # 保存每个 task 的详细 JSON
     for report_case in report.cases:
         result: dict[str, Any] = {
             "case_name": report_case.name,
             "inputs": report_case.inputs,
             "agents": agent_model_info,
+            "judge": judge_model_info,
             "scores": {},
         }
         for score_name, score_val in report_case.scores.items():
