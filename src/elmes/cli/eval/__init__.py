@@ -162,38 +162,33 @@ async def eval_logic(
 
         task_data.append(data)
 
-        # 任务变量作为 inputs（judge 通过 include_input 看到）
-        task_variables = data.get("task_variables", {})
-        inputs_str = "\n".join(f"{k}: {v}" for k, v in task_variables.items())
+        task_variables: dict[str, Any] = data.get("task_variables", {})
 
         cases.append(
             Case(
                 name=task_file.stem,
-                inputs=inputs_str,
+                inputs=task_variables,
                 expected_output=None,
             )
         )
 
     # 构建 Dataset
-    dataset: Dataset[str, str, None] = Dataset(
+    dataset: Dataset[dict[str, Any], str, None] = Dataset(
         cases=cases,
         evaluators=evaluators,
     )
 
-    # task 函数：inputs 是任务变量字符串，output 是格式化后的对话
-    # 需要按顺序与 cases 对应
+    # task 函数：inputs 是任务变量 dict，output 是格式化后的对话
     dialog_map = {
         task_file.stem: _format_messages(data.get("messages", {}))
         for task_file, data in zip(task_files, task_data)
     }
 
-    def get_dialog(inputs: str) -> str:
-        # 通过反查 cases 中对应的 name 来获取对话
-        # inputs 是任务变量字符串，每个 case 唯一
+    def get_dialog(inputs: dict[str, Any]) -> str:
         for case, tf in zip(cases, task_files):
             if case.inputs == inputs:
                 return dialog_map[tf.stem]
-        return inputs
+        return str(inputs)
 
     click.echo("开始 LLM as judge 评估...")
 
@@ -220,6 +215,7 @@ async def eval_logic(
     # 保存每个 task 的详细 JSON
     for report_case in report.cases:
         result: dict[str, Any] = {
+            "eval_name": eval_config.name,
             "case_name": report_case.name,
             "inputs": report_case.inputs,
             "target": eval_config.target,
