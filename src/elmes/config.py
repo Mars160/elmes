@@ -36,6 +36,10 @@ def load_conf(path: Path) -> ElmesConfig:
     for model_name, model_config in models.items():
         if model_config.get("name", None) is None:
             model_config["name"] = model_name
+    agents = n_data.get("agents", {})
+    for agent_name, agent_config in agents.items():
+        if agent_config.get("name", None) is None:
+            agent_config["name"] = agent_name
     CONFIG = ElmesConfig(**n_data)
     if CONFIG.evaluation is not None:
         if CONFIG.evaluation.name is None:
