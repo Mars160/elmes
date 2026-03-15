@@ -206,8 +206,9 @@ async def eval_logic(
     # 输出控制台报告
     report.print(include_input=True, include_reasons=include_reasons)
 
-    # 保存结果
-    eval_dir = Path(output_path) if output_path else input_dir / "eval"
+    # 保存结果，目录结构为 [output_dir]/[target]/
+    base_dir = Path(output_path) if output_path else input_dir / "eval"
+    eval_dir = base_dir / eval_config.target
     eval_dir.mkdir(parents=True, exist_ok=True)
 
     # 评测用的 judge model 信息
@@ -221,6 +222,7 @@ async def eval_logic(
         result: dict[str, Any] = {
             "case_name": report_case.name,
             "inputs": report_case.inputs,
+            "target": eval_config.target,
             "agents": agent_model_info,
             "judge": judge_model_info,
             "scores": {},
