@@ -171,7 +171,7 @@ class GraphBuilder:
         }
 
         node_class = type(
-            f"{node_name}Node",
+            node_name,
             (AgentNode,),
             class_dict,
         )
@@ -192,7 +192,7 @@ class GraphBuilder:
             self.router_table = router_table
 
         node_class = type(
-            f"{router_name}Node",
+            router_name,
             (RouterNode,),
             {
                 "__init__": init_method,
