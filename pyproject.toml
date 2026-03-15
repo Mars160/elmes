@@ -1,12 +1,13 @@
 [project]
 name = "elmes"
-version = "0.1.13"
+version = "1.0.0"
 description = "Education Language Model Evaluation System"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "click>=8.2.1",
     "diskcache>=5.6.3",
+    "fastmcp>=3.1.1",
     "matplotlib>=3.10.3",
     "pandas>=2.2.3",
     "polyfactory>=2.21.0",
@@ -21,10 +22,7 @@ dependencies = [
 elmes = "elmes.cli.main:main"
 
 [project.optional-dependencies]
-openai = [
-    "openai>=2.26.0",
-    "pydantic-ai-slim[openai]>=1.68.0",
-]
+openai = ["openai>=2.26.0", "pydantic-ai-slim[openai]>=1.68.0"]
 
 [build-system]
 requires = ["hatchling"]
@@ -37,8 +35,4 @@ build-backend = "hatchling.build"
 elmes = { workspace = true }
 
 [dependency-groups]
-dev = [
-    "click>=8.2.1",
-    "fastmcp>=3.1.1",
-    "hatch>=1.14.1",
-]
+dev = ["click>=8.2.1", "hatch>=1.14.1"]

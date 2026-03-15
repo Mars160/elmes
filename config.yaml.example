@@ -3,24 +3,28 @@ globals:
   # 并发
   concurrency: 16
   # 模型调用限制次数
-  recursion_limit: 50
+  recursion_limit: 3
+  # generate结果保存路径
+  output_dir: "./generated"
 
 # 定义任务中需要用到的模型
 models:
   4o_teacher:
     type: openai
-    api_key: <YOUR API KEY>
-    base_url: <YOUR API BASE>
-    model: gpt-4o-mini
+    api_key: <YOUR_API_KEY>
+    base_url: <YOUR_BASE_URL>
+    # model: gpt-4o
+    model: gemini-3.1-pro-preview
     # 如果需要指定特殊参数
+    # kargs字段中的参数会在调用模型时传入，具体参数取决于你使用的模型和底层实现，常见的参数有temperature、max_tokens等
     kargs:
       temperature: 0.7
   gemini_stu:
     type: openai
-    api_key: <YOUR ANOTHER API KEY>
-    base_url: <YOUR ANOTHER API BASE>
-    model: gemini-2.5-pro-exp-03-25
-    # model: gpt-4o-mini
+    api_key: <YOUR_API_KEY>
+    base_url: <YOUR_BASE_URL>
+    # model: gemini-2.5-pro-exp-03-25
+    model: gpt-4o
 
 # 定义任务中需要使用的agent
 agents:
@@ -78,6 +82,7 @@ agents:
   student:
     model: gemini_stu
     system_prompt: 你是一名{image}的学生,你的任务是学习掌握这节课老师所教的习题。
+    # 该agent可以调用的工具列表，工具的具体配置在下方mcps字段中定义
     tools:
       - calculator # 该agent可以调用的工具列表，工具的具体配置在下方mcps字段中定义
 
@@ -87,7 +92,7 @@ directions:
   # START和END是两个特殊节点，也算作Agent
   # 箭头前后必须有空格，且箭头只能是->，不能是其他符号
   - START -> teacher # 程序开始后，首先激活teacher这个agent用于生成数据
-  - teacher -> router:any_keyword_route(keywords=["<end>", "下课"], exists_to=END, else_to="student") # teacher agent生成结束后，经由keyword_route这个函数判断下一步导向哪里(END 还是 student)
+  - teacher -> router:any_keyword_router(keywords=["<end>", "下课"], exists_to=END, else_to="student") # teacher agent生成结束后，经由keyword_route这个函数判断下一步导向哪里(END 还是 student)
   - student -> teacher # student agent生成结束后，直接激活teacher agent继续生成
 
 tasks:
@@ -104,7 +109,7 @@ tasks:
       - 基础知识较扎实但应用能力需提升，在数学方面有一定困难。性格内向，在熟悉环境中友好交流，有少数亲密朋友，对绘画和手工制作感兴趣。
       # - 最基本的加减法都搞不清楚，认字量极少，上课完全听不懂。注意力无法集中，经常打断老师课堂，作业要么不交要么全错，在学校只对打闹感兴趣。
     question:
-      - 一个三位数，个位和百位数字交换后还是一个三位数，它与原三位数的差的个位数字是7，试求它们的差．
+      # - 一个三位数，个位和百位数字交换后还是一个三位数，它与原三位数的差的个位数字是7，试求它们的差．
       - 师徒两人装配自行车，师傅每天装配32辆，徒弟每天比师傅少装配8辆．经过多少天师傅比徒弟多装配56辆？
 
   # iter代表遍历content中所有task，比较适合多个字段不能/不需要排列组合的情况
@@ -126,7 +131,7 @@ evaluation:
   # 要评估的字段
   fields:
     - name: accuracy # 评估维度名称
-      rubric: 教师的教学内容是否正确无误，是否存在错误或误导性的地方。 # 评分细则，需要讲清楚是哪个agent的哪个方面的表现，以及评分时需要考虑的因素
+      rubric: 教师的教学内容是否正确无误，是否存在错误或误导性的地方。 # 评分细则，需要讲清楚是哪个agent的哪个方面的表现，以及评分时需要考虑的因素，越具体越好，示例的这种细则会导致评分容易走极端，建议细化。
       reason: true # 是否需要评分理由
     - name: guidance
       rubric: 教师的教学内容是否能够有效引导学生思考和理解，是否提供了清晰的解题思路和步骤。
@@ -143,7 +148,7 @@ mcps:
   calculator:
     type: stdio # 支持stdio、http-with-sse、streamable-http三种类型
     command: "python"
-    args: [".devs/mcp.py"]
+    args: [".devs/calculator_mcp.py"]
     timeout: 30
     env:
       AUTH_TOKEN: "123456" # 如果MCP需要环境变量，可以在这里配置
