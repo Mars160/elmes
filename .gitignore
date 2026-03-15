@@ -41,4 +41,5 @@ label_studio.txt
 # devs 开发中用到的一些测试文件
 .devs/
 
-
+# generated 目录下的文件不需要被 git 管理
+generated/
