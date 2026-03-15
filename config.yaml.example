@@ -4,26 +4,13 @@ globals:
   concurrency: 16
   # 模型调用限制次数
   recursion_limit: 50
-  # 重试（下面是默认）
-  retry:
-    # 重试次数
-    attempt: 3
-    # 重试间隔（秒）
-    interval: 3
-  # 脚本运行期间记忆配置
-  memory:
-    # 所有记忆、对话记录、评测结果等信息的存储路径
-    # 默认和配置文件同名目录
-    # 记忆存放的位置，推荐命名为 任务名/模型名
-    path: ./multiturn_task/gpt-4o-mini
 
 # 定义任务中需要用到的模型
 models:
   4o_teacher:
     type: openai
     api_key: <YOUR API KEY>
-    api_base: <YOUR API BASE>
-    max_retries: 3 # 模型的调用重试次数，默认为3
+    base_url: <YOUR API BASE>
     model: gpt-4o-mini
     # 如果需要指定特殊参数
     kargs:
@@ -31,8 +18,7 @@ models:
   gemini_stu:
     type: openai
     api_key: <YOUR ANOTHER API KEY>
-    api_base: <YOUR ANOTHER API BASE>
-    max_retries: 5
+    base_url: <YOUR ANOTHER API BASE>
     model: gemini-2.5-pro-exp-03-25
     # model: gpt-4o-mini
 
@@ -42,11 +28,47 @@ agents:
   teacher:
     # 该agent用到的模型
     model: 4o_teacher
-    # 提示词
-    system_prompt:
-      - 你是一个有耐心、有爱心的数学老师，这是你今天要教的学生的人物画像：{image} 你需要根据学生的特点进行一对一的引导式讲题，讲题的过程中要自然融入个性化、价值观对齐和激发创造力 【教学要求】 请通过引导式教学方法帮我解决数学题 教学要点： 采用一问一答的方式，每次只提出一个引导性问题，等我回答后再继续 不要直接告诉我答案，而是通过启发引导我思考解题思路 根据我的学习特点，保持耐心，使用简单明了的语言 在讲解中融入积极鼓励和情感支持，增强我的自信心 在适当的时候融入中国传统价值观 把复杂问题分解成我能理解的小步骤 联系生活实际，使数学概念更具体可感 【创造力培养】 鼓励我从多个角度思考问题，不局限于标准解法 引导我发现数学问题的多种可能解决方案 当我提出自己的解题思路时，给予肯定和指导 通过与我感兴趣的足球等体育活动创造性地联系数学概念 设计开放性问题，培养我的发散思维能力 鼓励我用自己的语言解释数学概念，表达个人理解 赞赏我的创新思路和尝试，即使答案不完全正确 请开始你的教学引导，记住要一步一步来，保持简单、耐心和鼓励性。请注意我要一问一答的形式，也不要一直提示我。请确保讲完之后,明确表示下课,可以使用"<end>"等明确的下课信号。不要替学生回答，你只要当好老师就行
-      - "这是本次一对一辅导所要讲的习题: {question}"
-    retries: 3 # 该agent的重试次数
+    # 提示词，其中可使用task.content中的字段
+    # system_prompt 可以是 str 也可以是 list[str]
+    system_prompt: ｜
+      你是一位富有耐心和爱心的数学老师，今天你的任务是为这位学生提供一对一的引导式教学。以下是学生的画像信息：{image}。请根据该学生的特点，个性化地引导讲解数学题，在教学过程中自然融入个性化支持、价值观引导以及创造力激发。
+
+      ---
+
+      \#\#\# 教学要求
+
+      请采用**引导式教学法**帮助学生解决数学问题，具体要求如下：
+
+      * 以**一问一答**的方式进行教学，每次仅提出**一个引导性问题**，等待学生回答后再继续；
+      * 不要直接给出答案，而应通过启发式提问引导学生自主思考；
+      * 根据学生的学习特点，保持耐心，使用**简单清晰的语言**进行表达；
+      * 在讲解过程中加入**积极的鼓励**与**情感支持**，增强学生的自信心；
+      * 在适当场合融入**中国传统价值观**，如坚持、尊师重道、勤奋等；
+      * 将复杂问题拆解为学生能理解的**小步骤**；
+      * 尽量联系**生活实际场景**，使数学概念具体、生动。
+
+      ---
+
+      \#\#\# 创造力培养
+
+      * 鼓励学生**从多个角度思考问题**，不拘泥于标准解法；
+      * 引导其发现数学问题的多种可能解决方案；
+      * 当学生尝试自主解题时，给予积极反馈和必要指导；
+      * 善于将数学概念与学生兴趣（如**足球等体育活动**）相结合，激发创造性思维；
+      * 设计**开放性问题**，培养学生的发散性思维；
+      * 鼓励学生用自己的语言表达对数学概念的理解；
+      * 对学生的创新思路和尝试表示赞赏，即使答案并不完全正确。
+
+      ---
+
+      请开始你的教学引导。请记住：
+
+      * 一次只提一个问题；
+      * 保持语言简洁、态度耐心、语气鼓励；
+      * 不要提示过多，也**不要直接给出答案**；
+      * 绝对不要替学生回答问题**，你的职责是当一名好老师；
+      * 你每次只输出老师要说的内容，**不要同时扮演老师和学生
+      * 教学结束时，请明确表示“下课”，可以使用 `<end>` 作为结束标志。
     # 以下memory配置为默认配置
     memory:
       enable: true # 是否启用记忆
@@ -55,14 +77,15 @@ agents:
       keep_turns: 3 # 默认3轮，即上方配置的prompt-[user-assistant-user-assistant-user-assistant]-user
   student:
     model: gemini_stu
-    prompt:
-      - role: system
-        content: 你是一名{image}的学生,你的任务是学习掌握这节课老师所教的习题。
+    system_prompt: 你是一名{image}的学生,你的任务是学习掌握这节课老师所教的习题。
+    tools:
+      - calculator # 该agent可以调用的工具列表，工具的具体配置在下方mcps字段中定义
 
 # 信息传递方向
 directions:
   # 从一个agent到另一个agent
   # START和END是两个特殊节点，也算作Agent
+  # 箭头前后必须有空格，且箭头只能是->，不能是其他符号
   - START -> teacher # 程序开始后，首先激活teacher这个agent用于生成数据
   - teacher -> router:any_keyword_route(keywords=["<end>", "下课"], exists_to=END, else_to="student") # teacher agent生成结束后，经由keyword_route这个函数判断下一步导向哪里(END 还是 student)
   - student -> teacher # student agent生成结束后，直接激活teacher agent继续生成
@@ -70,9 +93,7 @@ directions:
 tasks:
   # 由START进入第一个agent的prompt
   # start_prompt可选，如果未指定就只传agent中的prompt
-  start_prompt:
-    role: user
-    content: "这是本次一对一辅导所要讲的习题: {question}"
+  start_prompt: "这是本次一对一辅导所要讲的习题: {question}"
   # task模式， 可选union和iter
   # union指将content下所有字段各选一项排列组合，例如在本例中，就形成了len(image) * len(question)个task
   mode: union
@@ -80,7 +101,7 @@ tasks:
     # content中的字段将被用于动态生成agents中的prompt，例如image将替换提示词中所有{image}
     image:
       - 认知能力强，逻辑思维突出，知识掌握全面且能灵活应用。性格开朗自信，班级小领袖，与师生关系融洽，对科学实验有浓厚兴趣。
-      # - 基础知识较扎实但应用能力需提升，在数学方面有一定困难。性格内向，在熟悉环境中友好交流，有少数亲密朋友，对绘画和手工制作感兴趣。
+      - 基础知识较扎实但应用能力需提升，在数学方面有一定困难。性格内向，在熟悉环境中友好交流，有少数亲密朋友，对绘画和手工制作感兴趣。
       # - 最基本的加减法都搞不清楚，认字量极少，上课完全听不懂。注意力无法集中，经常打断老师课堂，作业要么不交要么全错，在学校只对打闹感兴趣。
     question:
       - 一个三位数，个位和百位数字交换后还是一个三位数，它与原三位数的差的个位数字是7，试求它们的差．
@@ -96,52 +117,46 @@ tasks:
 
 # 设定用于评估的模型和提示词，以及输出的格式
 evaluation:
-  # 评估任务名称, 推荐命名为 任务名_模型名
-  name: multiturn_task_gpt-4o-mini
+  # 评估任务名称
+  name: multiturn
   # 选择用于评估的模型
-  model: 4o_teacher
-  # 设置用于评估的提示词
-  # 可以使用模板，在评估时将动态修改
-  prompt:
-    - role: system
-      content: |
-        你是一个专业的教学评估专家，请根据给定的标准对教学内容进行客观、公正的评估。
-        请你从准确性、引导性、指向性和个性化四个方面对教学内容进行评价，每个维度满分5分，总分为20分。
-    - role: user
-      content: |
-        学生画像: {task.image}
-        题目: {task.question}
+  judge_model: 4o_teacher
+  # 被评估的对象名，随便写，用于可视化
+  target: gpt-4o-mini
+  # 要评估的字段
+  fields:
+    - name: accuracy # 评估维度名称
+      rubric: 教师的教学内容是否正确无误，是否存在错误或误导性的地方。 # 评分细则，需要讲清楚是哪个agent的哪个方面的表现，以及评分时需要考虑的因素
+      reason: true # 是否需要评分理由
+    - name: guidance
+      rubric: 教师的教学内容是否能够有效引导学生思考和理解，是否提供了清晰的解题思路和步骤。
+      reason: true
+    - name: pointing
+      rubric: 教师的教学内容是否能够准确指向问题的关键点，是否能够帮助学生抓住问题的核心。
+      reason: true
+    - name: personalization
+      rubric: 教师的教学内容是否能够根据学生的特点进行个性化的讲解，是否能够激发学生的兴趣和创造力。
+      reason: true
 
-        师生之间对话如下:
-        {messages.as_dialog()}
-
-  # 输出格式
-  # format下面写每个字段
-  # 每个字段需要包含type和description，分别表示数据类型和描述
-  # type可以是以下几种类型：str, int, float, bool, dict
-  # description可以是任意字符串，用于描述字段的意思
-  format:
-    - field: accuracy
-      type: float
-      description: 关于讲题内容的评价
-    - field: guidance
-      # 如果type是dict，则需要再添加一个items字段，用于描述子字段的信息
-      type: dict
-      description: 教学内容的引导性评分
-      items:
-        - field: score
-          type: float
-          description: 教学内容的引导性的评分
-        - field: reason
-          type: str
-          description: 评分理由，应当用中文表示
-    - field: pointing
-      type: float
-      description: 教学内容的指向性评分
-    - field: personalization
-      type: float
-      description: 教学内容的个性化评分
-  # 格式化方式，可以是以下几种：tool, prompt
-  # 推荐使用tool模式，
-  # 但是gptgod似乎并不支持tool :-(
-  format_mode: prompt
+mcps:
+  # 在这里配置一些MCP Server，供Agent调用
+  calculator:
+    type: stdio # 支持stdio、http-with-sse、streamable-http三种类型
+    command: "python"
+    args: [".devs/mcp.py"]
+    timeout: 30
+    env:
+      AUTH_TOKEN: "123456" # 如果MCP需要环境变量，可以在这里配置
+  # 其他类型的MCP配置示例
+  # calculator_http:
+  #   type: http-with-sse
+  #   url: "http://localhost:8000/calculate"
+  #   timeout: 30
+  #   headers:
+  #     Authorization: "Bearer 123456" # 如果MCP需要认证，可以在这里配置请求头
+  # calculator_stream:
+  #   type: streamable-http
+  #   url: "http://localhost:8000/stream-calculate"
+  #   timeout: 30
+  #   headers:
+  #     Authorization: "Bearer 123456"
