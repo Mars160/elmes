@@ -18,7 +18,9 @@ class AgentMemoryConfig(BaseModel):
 
 class AgentConfig(BaseModel):
     model: str
-    prompt: Final[List[Message]]
+    name: str
+    system_prompt: Final[list[str] | str]
+    retries: Optional[int] = 3
     memory: AgentMemoryConfig = AgentMemoryConfig(enable=True)
 
     checkpointer: Optional[Any] = None

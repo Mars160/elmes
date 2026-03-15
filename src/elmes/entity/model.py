@@ -6,7 +6,8 @@ from pydantic import BaseModel
 class ModelConfig(BaseModel):
     api_base: Optional[str]
     api_key: Optional[str]
+    max_retries: Optional[int] = 3
     kargs: Optional[Dict[str, Any]] = None
-    model: Optional[str]
+    model: str
     name: str
     type: str = "openai"
