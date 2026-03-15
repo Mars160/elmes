@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class Task(BaseModel):
-    start_ptompt: str = Field(..., description="任务的初始提示词")
+    start_prompt: str = Field(..., description="任务的初始提示词")
     content: list[dict[str, str]]
 
     @staticmethod
@@ -36,7 +36,7 @@ class Task(BaseModel):
         else:
             raise ValueError(f"不支持的mode类型: {mode}")
 
-        return Task(start_ptompt=start_prompt, content=tasks)
+        return Task(start_prompt=start_prompt, content=tasks)
 
 
 if __name__ == "__main__":

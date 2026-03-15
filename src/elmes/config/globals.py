@@ -3,4 +3,5 @@ from pydantic import BaseModel, Field
 
 class Globals(BaseModel):
     concurrency: int = Field(default=16, description="全局并发数")
-    model_call_limit: int = Field(default=5, description="模型调用次数限制")
+    recursion_limit: int = Field(default=50, description="图递归深度限制")
+    output_dir: str = Field(default="./generated", description="generate结果保存路径")
