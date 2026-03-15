@@ -233,7 +233,7 @@ async def eval_logic(
                 entry["reason"] = score_val.reason
             result["scores"][score_name] = entry
 
-        out_file = eval_dir / f"{report_case.name}_eval.json"
+        out_file = eval_dir / f"{eval_config.name}_{report_case.name}_eval.json"
         with open(out_file, "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
 
