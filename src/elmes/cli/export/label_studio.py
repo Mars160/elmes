@@ -1,61 +1,79 @@
-import asyncio
-from pathlib import Path
-from tqdm.asyncio import tqdm
-from typing import Dict, Any
+"""Label Studio export command for ELMES CLI."""
 
-import json as jsonmodule
 import asyncio
-from tqdm.asyncio import tqdm
+import json as jsonmodule
+from pathlib import Path
 
 import click
-
-from pathlib import Path
-
-from langchain.globals import set_debug
+from tqdm.asyncio import tqdm
 
 
-def export_label_studio_logic():
-    from elmes.config import CONFIG
+@click.command(help="Export generated conversations to Label Studio format")
+@click.option("--config", default="config.yaml", help="Path to the configuration file")
+@click.option(
+    "--input",
+    "input_dir",
+    default=None,
+    help="Directory containing intermediate task_N.json files (defaults to globals.output_dir in config).",
+)
+@click.option(
+    "--output",
+    "output_dir",
+    default=None,
+    help="Output directory (defaults to --input directory).",
+)
+@click.option("--debug", default=False, help="Debug Mode", is_flag=True)
+def label_studio(
+    config: str, input_dir: str | None, output_dir: str | None, debug: bool
+):
+    """Export conversations to Label Studio format."""
+    if debug:
+        import logging
 
-    input = CONFIG.globals.memory.path
-    output = input
+        logging.basicConfig(level=logging.DEBUG)
 
-    dbfiles = []
-    files = input.iterdir()
-    for file in files:
-        if file.suffix == ".db":
-            dbfiles.append(file.absolute())
+    from elmes.config import load_config
+    from elmes.cli.generate import _build_run_dir
+
+    config_path = Path(config)
+    config_obj = load_config(config)
+
+    if not config_obj.evals:
+        raise click.ClickException("Evaluation field not configured in config file")
+
+    input_path = (
+        Path(input_dir)
+        if input_dir
+        else _build_run_dir(config_path, Path(config_obj.globals.output_dir))
+    )
+    output_path = Path(output_dir) if output_dir else input_path
+
+    task_files = sorted(
+        f
+        for f in input_path.glob("task_*.json")
+        if f.stem.removeprefix("task_").isdigit()
+    )
+    if not task_files:
+        click.echo(f"No task_*.json files found in {input_path}", err=True)
+        return
 
     from elmes.cli.export.exporter.label_studio_ import aexport_label_studio
     from elmes.cli.export.const.label_studio import generate_label_studio_interface
 
-    if CONFIG.evaluation is None:
-        raise ValueError("Evaluation字段未配置")
+    tasks = [aexport_label_studio(f) for f in task_files]
+    results = asyncio.run(tqdm.gather(*tasks, desc="Exporting to Label Studio"))
 
-    tasks = []
-    for dbfile in dbfiles:
-        task = aexport_label_studio(dbfile)
-        tasks.append(task)
+    output_path.mkdir(parents=True, exist_ok=True)
 
-    results = asyncio.run(tqdm.gather(*tasks))
-    with open(output / f"label_studio.json", "w", encoding="utf-8") as f:
-        jsonmodule.dump(results, f, ensure_ascii=False, indent=4)
+    # Save Label Studio data
+    output_file = output_path / "label_studio.json"
+    with open(output_file, "w", encoding="utf-8") as f:
+        jsonmodule.dump(results, f, ensure_ascii=False, indent=2)
+    click.echo(f"Exported to: {output_file}")
 
-    template = generate_label_studio_interface(CONFIG.evaluation.format)
-    with open(output / "label_studio.txt", "w", encoding="utf-8") as f:
+    # Save Label Studio interface template
+    template = generate_label_studio_interface(config_obj.evals.fields)
+    template_file = output_path / "label_studio_template.xml"
+    with open(template_file, "w", encoding="utf-8") as f:
         f.write(template)
-
-
-
-@click.command(help="Export chat databases to Label Studio Data format")
-@click.option(
-    "--config", default="config.yaml", help="Directory containing chat databases"
-)
-@click.option("--debug", default=False, help="Debug Mode", is_flag=True)
-def label_studio(config: str, debug: bool):
-    set_debug(debug)
-    from elmes.config import load_conf
-
-    path = Path(config)
-    load_conf(path)
-    export_label_studio_logic()
+    click.echo(f"Template saved to: {template_file}")

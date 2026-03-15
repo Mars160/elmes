@@ -1,49 +1,64 @@
-import json as jsonmodule
+"""Export JSON command for ELMES CLI."""
+
 import asyncio
-from tqdm.asyncio import tqdm
-
-import click
-
+import json as jsonmodule
 from pathlib import Path
 
-from langchain.globals import set_debug
+import click
+from tqdm.asyncio import tqdm
 
 
-def export_json_logic():
-    from elmes.config import CONFIG
+@click.command(help="Export generated conversations to JSON format")
+@click.option("--config", default="config.yaml", help="Path to the configuration file")
+@click.option(
+    "--input",
+    "input_dir",
+    default=None,
+    help="Directory containing intermediate task_N.json files (defaults to globals.output_dir in config).",
+)
+@click.option(
+    "--output",
+    "output_dir",
+    default=None,
+    help="Output directory (defaults to --input directory).",
+)
+@click.option("--debug", default=False, help="Debug Mode", is_flag=True)
+def json(config: str, input_dir: str | None, output_dir: str | None, debug: bool):
+    """Export generated conversations to JSON format."""
+    if debug:
+        import logging
 
-    input = CONFIG.globals.memory.path
-    output = input
+        logging.basicConfig(level=logging.DEBUG)
 
-    dbfiles = []
-    files = input.iterdir()
-    for file in files:
-        if file.suffix == ".db":
-            dbfiles.append(file.absolute())
+    from elmes.config import load_config
+    from elmes.cli.generate import _build_run_dir
+
+    config_path = Path(config)
+    config_obj = load_config(config)
+    input_path = (
+        Path(input_dir)
+        if input_dir
+        else _build_run_dir(config_path, Path(config_obj.globals.output_dir))
+    )
+    output_path = Path(output_dir) if output_dir else input_path
+
+    task_files = sorted(
+        f
+        for f in input_path.glob("task_*.json")
+        if f.stem.removeprefix("task_").isdigit()
+    )
+    if not task_files:
+        click.echo(f"No task_*.json files found in {input_path}", err=True)
+        return
 
     from elmes.cli.export.exporter.json_ import aexport_json
 
-    tasks = []
-    for dbfile in dbfiles:
-        task = aexport_json(dbfile)
-        tasks.append(task)
+    tasks = [aexport_json(f) for f in task_files]
+    results = asyncio.run(tqdm.gather(*tasks, desc="Exporting to JSON"))
 
-    result = asyncio.run(tqdm.gather(*tasks))
-    for input_path, obj in result:
-        output_path = output / f"{input_path.stem}.json"
-        with open(output_path, "w", encoding="utf-8") as f:
-            jsonmodule.dump(obj, f, ensure_ascii=False, indent=4)
-
-
-@click.command(help="Export chat databases to JSON format")
-@click.option(
-    "--config", default="config.yaml", help="Directory containing chat databases"
-)
-@click.option("--debug", default=False, help="Debug Mode", is_flag=True)
-def json(config: str, debug: bool):
-    set_debug(debug)
-    from elmes.config import load_conf
-
-    path = Path(config)
-    load_conf(path)
-    export_json_logic()
+    output_path.mkdir(parents=True, exist_ok=True)
+    for input_file, obj in results:
+        output_file = output_path / f"{input_file.stem}_export.json"
+        with open(output_file, "w", encoding="utf-8") as f:
+            jsonmodule.dump(obj, f, ensure_ascii=False, indent=2)
+        click.echo(f"Exported: {output_file}")

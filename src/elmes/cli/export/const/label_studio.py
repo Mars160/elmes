@@ -1,8 +1,11 @@
+"""Label Studio export constants."""
+
 from typing import Sequence
-from elmes.entity import FormatField
+
+from elmes.config.eval import EvalField
 
 
-TEMPLATE_template = """<View>
+TEMPLATE_PREFIX = """<View>
   <Style>
     .container {
       display: flex;
@@ -54,35 +57,52 @@ TEMPLATE_SUFFIX = """
 """
 
 
-def generate_labeling(fields: Sequence[FormatField]) -> str:
-    compoents: list[str] = []
+def _generate_field_component(field: EvalField, name: str) -> str:
+    """Generate a Label Studio component for a single field."""
+    template = (
+        f'<Header value="{name}" size="8"/><View className="assessment-item">%s</View>'
+    )
+
+    if field.type == "int":
+        max_rating = field.max if field.max is not None else 5
+        return (
+            template
+            % f'<Rating name="{name}" maxRating="{max_rating}" toName="dialogue" />'
+        )
+    elif field.type == "float":
+        max_val = f' max="{field.max}"' if field.max is not None else ""
+        return template % f'<Number name="{name}" toName="dialogue"{max_val} />'
+    elif field.type == "str":
+        return template % f'<TextArea name="{name}" toName="dialogue" />'
+    elif field.type == "bool":
+        return template % (
+            f'<Choices name="{name}" toName="dialogue" showInline="true" choice="single-radio">'
+            f'<Choice value="Yes"/><Choice value="No"/></Choices>'
+        )
+    elif field.type == "dict" and field.fields:
+        children = generate_labeling(field.fields)
+        return template % f'<View className="border">{children}</View>'
+    else:
+        raise NotImplementedError(f"Field type {field.type} not supported")
+
+
+def generate_labeling(fields: Sequence[EvalField]) -> str:
+    """Generate Label Studio components for evaluation fields."""
+    components: list[str] = []
     for field in fields:
-        name = field.field
-        template = f'      <Header value="{name}" size="8"/><View className="assessment-item">%s</View>\n'
-        if field.type == "int":
-            if field.max is not None:
-                compoents.append(template % f'<Rating name="{name}" maxRating="{field.max}" toName="dialogue" />')
-            else:
-                compoents.append(template % f'<Rating name="{name}" maxRating="5" toName="dialogue" />')
-        elif field.type == "float":
-            if field.max is not None:
-                compoents.append(template % f'<Number name="{name}" toName="dialogue" max="{field.max}" />')
-            else:
-                compoents.append(template % f'<Number name="{name}" toName="dialogue" />')
-        elif field.type == "str":
-            compoents.append(template % f'<TextArea name="{name}" toName="dialogue" />')
-        elif field.type == "bool":
-            compoents.append(template % f'<Choices name="{name}" toName="dialogue" showInline="true" choice="single-radio"><Choice value="Yes"/><Choice value="No"/></Choices>')
-        elif field.type == "dict":
-            children = generate_labeling(field.items)
-            compoents.append(template % f'<View className="border">{"".join(children)}</View>')
-        else:
-            raise NotImplementedError
-    return "".join(compoents)
+        name = field.name
+        template = (
+            f'<Header value="{name}" size="8"/>'
+            f'<View className="assessment-item">'
+            f'<Rating name="{name}" toName="dialogue" />'
+        )
+        if field.reason:
+            template += f'<TextArea name="{name}_reason" toName="dialogue" placeholder="评分理由" />'
+        template += "</View>"
+        components.append(template)
+    return "".join(components)
 
-def generate_label_studio_interface(fields: Sequence[FormatField]) -> str:
-    return TEMPLATE_template + generate_labeling(fields) + TEMPLATE_SUFFIX
 
-    
-            
-        
+def generate_label_studio_interface(fields: Sequence[EvalField]) -> str:
+    """Generate complete Label Studio interface XML."""
+    return TEMPLATE_PREFIX + generate_labeling(fields) + TEMPLATE_SUFFIX
