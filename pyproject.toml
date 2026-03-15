@@ -10,6 +10,8 @@ dependencies = [
     "matplotlib>=3.10.3",
     "pandas>=2.2.3",
     "polyfactory>=2.21.0",
+    "pydantic-ai-slim>=1.68.0",
+    "pydantic-graph>=1.68.0",
     "pyyaml>=6.0.2",
     "tenacity>=9.1.4",
 ]
@@ -20,6 +22,7 @@ elmes = "elmes.cli.main:main"
 [project.optional-dependencies]
 openai = [
     "openai>=2.26.0",
+    "pydantic-ai-slim[openai]>=1.68.0",
 ]
 
 [build-system]
@@ -33,7 +36,4 @@ build-backend = "hatchling.build"
 elmes = { workspace = true }
 
 [dependency-groups]
-dev = [
-    "click>=8.2.1",
-    "hatch>=1.14.1",
-]
+dev = ["click>=8.2.1", "hatch>=1.14.1"]
