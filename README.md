@@ -2,320 +2,305 @@
 
 [论文](https://arxiv.org/abs/2507.22947)
 
-# ELMES - Evaluating Large Language Models in Educational Scenarios
+<p align="center">
+  <img src="./docs/assets/icons/elmes-logo.svg" alt="ELMES Logo" width="120" height="120">
+</p>
+
+<h1 align="center">ELMES - Evaluating Large Language Models in Educational Scenarios</h1>
 
 ELMES (Evaluating Large Language Models in Educational Scenarios) 是一个 Python 框架，旨在为 LLM 不同场景下的各种任务提供代理编排和自动评估的功能。它采用模块化架构，基于 YAML 配置，可扩展的实体使得该框架适用于构建、配置和评估复杂的基于代理的工作流。
 
-## 主要特点
+## 核心特性
 
-- **模块化架构**：基于 LangGraph 构建的灵活代理编排系统
-- **基于 YAML 的配置**：简单直观的任务和工作流定义，支持变量模板渲染
-- **多代理协作**：支持多个 LLM 代理之间的交互和协作，并可通过路由器实现复杂流程控制
-- **自动评估**：内置评估框架，支持 JSON-Schema 或工具（function calling）两种输出模式
-- **记忆管理与持久化**：对话历史通过 SQLite checkpoint 持久化，长链路任务不中断
-- **并发与重试机制**：内置并发执行（`concurrency`）与可配置的 Tenacity 重试策略
-- **可视化流程图**：通过 `draw` 命令可视化代理交互流程，直观展示工作流设计
+- **模块化架构**：采用 pydantic-ai 和 pydantic-graph 构建，支持灵活的代理编排
+- **YAML 配置驱动**：通过简单的 YAML 文件定义多轮对话场景、模型、代理和工作流
+- **多轮对话支持**：支持复杂的多智能体交互场景，包括路由器和条件跳转
+- **自动评估**：基于 LLM-as-Judge 的自动评估系统，支持多维度评分
+- **MCP 集成**：支持 Model Context Protocol (MCP) 服务器，扩展代理能力
+- **可视化分析**：内置雷达图和堆叠柱状图生成，直观展示评估结果
+- **工作流可视化**：自动生成 Mermaid 流程图，展示代理交互流程
+
+## 技术栈
+
+- **Python 3.10+**
+- **pydantic-ai**：用于构建和管理 AI 代理
+- **pydantic-graph**：用于定义和执行图工作流
+- **pydantic-evals**：用于 LLM-as-Judge 评估
+- **Click**：用于构建 CLI 工具
+- **Matplotlib**：用于数据可视化
+- **FastMCP**：用于 MCP 服务器集成
 
 ## 安装
 
 ```bash
-pip install elmes
+# 使用 uv 安装依赖
+uv sync
+
+# 或者使用 pip
+pip install -e .
+```
+
+可选的 OpenAI 支持：
+
+```bash
+uv add --dev openai
 ```
 
 ## 快速开始
 
-1. 创建配置文件 `config.yaml`（可参考 `config.yaml.example`）
-2. 运行 ELMES 命令行工具
+### 1. 配置环境
 
-```bash
-elmes pipeline --config config.yaml
-```
-
-## 配置示例
-
-ELMES 使用 YAML 配置文件定义任务、代理和评估方式。以下是一个简化的配置示例：
+创建配置文件 `config.yaml`，参考 `config.yaml.example`：
 
 ```yaml
-# 全局配置
 globals:
   concurrency: 16
-  recursion_limit: 50
-  retry:
-    attempt: 3
-    interval: 3
-  memory:
-    path: ./logs/my_exp
+  recursion_limit: 3
+  output_dir: "./generated"
 
-# 定义模型
 models:
-  gpt4o:
+  teacher_model:
     type: openai
-    api_key: ${OPENAI_KEY}
-    api_base: https://api.openai.com/v1
-    model: gpt-4o-mini
-    kargs:
-      temperature: 0.7
+    api_key: <YOUR_API_KEY>
+    base_url: <YOUR_BASE_URL>
+    model: gpt-4o
 
-# 定义代理
 agents:
   teacher:
-    model: gpt4o
-    prompt:
-      - role: system
-        content: "你是数学老师，学生画像: {image}"
-      - role: user
-        content: "{question}"
+    model: teacher_model
+    system_prompt: "你是一位耐心的老师..."
+
+directions:
+  - START -> teacher
+  - teacher -> END
+
+tasks:
+  start_prompt: "教学主题: {topic}"
+  mode: union
+  content:
+    topic:
+      - "数学"
+      - "物理"
+
+evaluation:
+  name: teaching_quality
+  judge_model: teacher_model
+  target: gpt-4o
+  fields:
+    - name: clarity
+      rubric: 教学内容是否清晰易懂
+      reason: true
+```
+
+### 2. 生成对话
+
+```bash
+elmes generate --config config.yaml
+```
+
+### 3. 评估结果
+
+```bash
+elmes eval --config config.yaml
+```
+
+### 4. 可视化结果
+
+```bash
+elmes visualize ./generated
+```
+
+## CLI 命令
+
+### `generate` - 生成对话
+
+生成基于配置的多轮对话数据。
+
+```bash
+elmes generate --config config.yaml --output ./results --debug
+```
+
+**选项：**
+
+- `--config`：配置文件路径（默认：config.yaml）
+- `--output`：输出目录（默认使用 globals.output_dir）
+- `--debug`：启用调试模式
+
+### `eval` - 评估对话
+
+使用 LLM-as-Judge 评估生成的对话质量。
+
+```bash
+elmes eval --config config.yaml --input ./generated --output ./eval_results
+```
+
+**选项：**
+
+- `--config`：配置文件路径（必需）
+- `--input`：生成结果目录（默认自动推断）
+- `--output`：评估结果输出目录
+- `--avg/--no-avg`：是否计算平均分（默认：启用）
+- `--include-reasons/--no-include-reasons`：是否包含评分理由（默认：启用）
+- `--debug`：启用调试模式
+
+### `export` - 导出数据
+
+将对话数据导出为不同格式。
+
+```bash
+# 导出为 JSON
+elmes export json --input ./generated --output ./exported.json
+
+# 导出为 Label Studio 格式
+elmes export label-studio --input ./generated --output ./label_studio.json
+```
+
+### `visualize` - 可视化评估结果
+
+从 CSV 文件生成堆叠柱状图和雷达图。
+
+```bash
+elmes visualize ./generated --x-rotation 30
+```
+
+**参数：**
+
+- `input_dir`：包含 CSV 文件的目录
+- `--x-rotation`：X 轴标签旋转角度（默认：30）
+
+### `draw` - 绘制工作流图
+
+根据配置生成代理工作流图。
+
+```bash
+elmes draw --config config.yaml --output workflow.png
+```
+
+**选项：**
+
+- `--config`：配置文件路径
+- `--output`：输出文件路径（支持 .png 或 .mmd）
+- `--print`：在控制台打印 Mermaid 代码
+- `--direction`：图表方向（TB/LR/RL/BT，默认：LR）
+
+### `hash` - 计算配置哈希
+
+计算配置文件的 MD5 哈希值，用于确定结果子目录名称。
+
+```bash
+elmes hash --config config.yaml
+```
+
+## 配置说明
+
+### 全局配置 (globals)
+
+```yaml
+globals:
+  concurrency: 16 # 并发任务数
+  recursion_limit: 3 # 最大递归调用次数
+  output_dir: "./generated" # 结果输出目录
+```
+
+### 模型配置 (models)
+
+```yaml
+models:
+  model_alias:
+    type: openai
+    api_key: <API_KEY>
+    base_url: <BASE_URL>
+    model: gpt-4o
+    kargs:
+      temperature: 0.7
+```
+
+### 代理配置 (agents)
+
+```yaml
+agents:
+  agent_name:
+    model: model_alias
+    system_prompt: "提示词内容"
     memory:
       enable: true
       keep_turns: 3
-
-# 定义代理间的信息传递方向
-directions:
-  - START -> teacher
-  - teacher -> router:any_keyword_route(keywords=["<end>", "下课"], exists_to=END, else_to="student")
-  - student -> teacher
-
-# 定义任务内容
-tasks:
-  mode: union
-  start_prompt:
-    role: user
-    content: "{question}"
-  content:
-    image:
-      - "逻辑思维突出，热爱科学"
-    question:
-      - "一个三位数..."
-      - "师徒两人装配自行车..."
-
-# 评估配置
-evaluation:
-  name: math_tutor_eval
-  model: gpt4o
-  format_mode: prompt
-  prompt:
-    - role: system
-      content: "你是专业评估专家..."
-  format:
-    - field: accuracy
-      type: float
-      description: "准确性"
-    - field: guidance
-      type: dict
-      description: "引导性"
-      items:
-        - field: score
-          type: float
-          description: "分数"
-        - field: reason
-          type: str
-          description: "理由"
+    tools:
+      - calculator # MCP 工具名称
 ```
 
-## 核心组件
-
-ELMES 由以下几个核心组件构成：
-
-1. **代理系统**：基于 LangGraph 构建的代理编排框架
-2. **路由系统**：控制代理之间的信息流动和交互
-3. **配置系统**：处理 YAML 配置文件并构建相应的实体
-4. **评估系统**：对代理性能进行自动化评估
-5. **记忆系统**：管理代理的对话历史和上下文
-
-## 进阶使用
-
-### 自定义路由器
-
-ELMES 支持自定义路由逻辑，控制代理之间的交互流程：
-
-```yaml
-directions:
-  - teacher -> router:any_keyword_route(keywords=["<end>", "下课"], exists_to=END, else_to="student")
-```
-
-### 评估格式化
-
-ELMES 支持多种评估输出格式，包括结构化的 JSON 输出：
-
-```yaml
-evaluation:
-  format:
-    - field: accuracy
-      type: float
-      description: "准确性评分"
-    - field: guidance
-      type: dict
-      description: "引导性评分"
-      items:
-        - field: score
-          type: float
-          description: "分数"
-        - field: reason
-          type: str
-          description: "评分理由"
-```
-
-### 可视化代理流程
-
-ELMES 提供 `draw` 命令，可以将配置文件中定义的代理交互流程绘制为可视化图表：
-
-```bash
-elmes draw --config config.yaml
-```
-
-该命令会根据配置文件中的 `directions` 部分生成一个 Mermaid 流程图，并保存为 PNG 格式（与配置文件同名）。这对于理解复杂的代理交互流程和调试路由逻辑特别有帮助。
-
-![代理流程图示例](docs/assets/imgs/config.png)
-
-## 贡献
-
-欢迎提交 Pull Request 或创建 Issue 来改进 ELMES。
-
-## 配置文件详解
-
-以下各段落基于 `config.yaml.example` 展开，帮助你快速理解和定制自己的任务。
-
-### 1. globals
-
-```yaml
-globals:
-  concurrency: 16 # 并发协程数，控制整体吞吐
-  recursion_limit: 50 # LangGraph 递归深度限制，防止死循环
-  retry: # Tenacity 重试策略
-    attempt: 3 # 最大重试次数
-    interval: 3 # 每次重试间隔（秒）
-  memory:
-    path: ./logs/my_exp # 所有 SQLite checkpoint 的存储目录
-```
-
-- **并发** 与 **递归深度** 保证任务性能与安全。
-- **retry** 字段映射到 Tenacity，自动为每个 LLM 调用提供重试。
-- **memory.path** 决定了对话历史与评测结果的持久化位置。
-
-### 2. models
-
-```yaml
-models:
-  gpt4o:
-    type: openai # 目前支持 openai / anthropic / qualsiasi future backend
-    api_key: ${OPENAI_KEY}
-    api_base: https://api.openai.com/v1
-    model: gpt-4o-mini
-    kargs: # 任何传递给 SDK 的 keyword arguments
-      temperature: 0.7
-```
-
-- 一个配置块 = 一个可调用模型。
-- `kargs` 将在调用 `client.chat.completions.create(**kargs)` 时透传。
-
-### 3. agents
-
-```yaml
-agents:
-  teacher:
-    model: gpt4o # 关联到 `models` 的键
-    prompt: # 完整 OpenAI 聊天格式 Prompt，可使用变量占位
-      - role: system
-        content: "你是数学老师，学生画像: {image}"
-      - role: user
-        content: "{question}"
-    memory: # 可选，单独覆盖全局 memory 策略
-      enable: true
-      keep_turns: 3 # 最多携带 3 轮上下文
-```
-
-- Prompt 支持 **占位符模板**，在任务运行时由 `tasks.content` 动态填充。
-- 每个代理最终被包裹为一个 LangGraph **节点**，自动注入重试与记忆逻辑。
-
-### 4. directions
+### 路由配置 (directions)
 
 ```yaml
 directions:
   - START -> teacher
-  - teacher -> router:any_keyword_route(keywords=["<end>", "下课"], exists_to=END, else_to="student")
+  - teacher -> router:any_keyword_router(keywords=["<end>"], exists_to=END, else_to="student")
   - student -> teacher
 ```
 
-- 使用箭头串联节点，描述了 LangGraph 中的 **有向边**。
-- 以 `router:` 前缀调用任意 Python 函数，实现条件跳转；示例中 `any_keyword_route` 根据关键词决定流程是否结束。
+支持的路由器：
 
-### 5. tasks
+- `any_keyword_router`：关键词匹配路由
+
+### 任务配置 (tasks)
 
 ```yaml
 tasks:
-  mode: union # union=笛卡尔积组合，iter=顺序遍历
-  start_prompt: # 可选，定义从 START 发出的首条消息
-    role: user
-    content: "{question}"
+  start_prompt: "初始提示词 {variable}"
+  mode: union # 或 iter
   content:
-    image:
-      - "逻辑思维突出，热爱科学"
-    question:
-      - "一个三位数..."
-      - "师徒两人装配自行车..."
+    variable:
+      - "值1"
+      - "值2"
 ```
 
-- `mode: union` 表示将 `image × question` 形成多任务并并发执行。
-- 变量将被 **一对一** 替换进代理与评估 prompt 中。
+- `union` 模式：所有字段排列组合生成任务
+- `iter` 模式：逐条遍历内容
 
-### 6. evaluation（可选）
+### 评估配置 (evaluation)
 
 ```yaml
 evaluation:
-  name: math_tutor_eval
-  model: gpt4o # 用于打分的模型
-  format_mode: prompt # prompt 或 tool 两种模式
-  prompt:
-    - role: system
-      content: "你是专业评估专家..."
-  format:
-    - field: accuracy
-      type: float
-      description: "准确性"
-    - field: guidance
-      type: dict
-      description: "引导性"
-      items:
-        - field: score
-          type: float
-          description: "分数"
-        - field: reason
-          type: str
-          description: "理由"
+  name: eval_name
+  judge_model: model_alias
+  target: target_name
+  fields:
+    - name: dimension_name
+      rubric: 评分细则描述
+      reason: true # 是否生成评分理由
 ```
 
-- **tool 模式**：利用 OpenAI function-calling，保证输出 JSON 100% 合法。
-- **prompt 模式**：通过严格的占位符和正则抽取，兼容不支持 function-calling 的模型或代理商。
+### MCP 配置 (mcps)
 
-> 若 `evaluation` 块被省略，ELMES 将仅执行任务，跳过评估阶段。
-
-### 7. 命令行工具
-
-ELMES 提供多个命令行工具，方便用户执行不同的操作：
-
-```bash
-# 生成对话
-elmes generate --config config.yaml
-
-# 导出对话为 JSON
-elmes export json --config config.yaml
-
-# 导出 Label Studio 数据
-elmes export label-studio --config config.yaml
-
-# 评估对话结果
-elmes eval --config config.yaml
-
-# 完整流水线（生成+导出JSON+评估，上述命令3合1）
-elmes pipeline --config config.yaml
-
-# 可视化评估结果
-elmes visualize eval/
-
-# 绘制Agent流程图
-elmes draw --config config.yaml
+```yaml
+mcps:
+  tool_name:
+    type: stdio # stdio / http-with-sse / streamable-http
+    command: "python"
+    args: ["script.py"]
+    timeout: 30
+    env:
+      KEY: "value"
 ```
 
----
+## 项目结构
 
-您可以在[这里](docs/scenes/zh-cn)找到我们为四个教学场景准备的文档
+```
+elmes/
+├── src/elmes/
+│   ├── cli/           # CLI 命令实现
+│   │   ├── generate/  # 生成对话
+│   │   ├── eval/      # 评估对话
+│   │   ├── export/    # 导出数据
+│   │   ├── visualize/ # 可视化
+│   │   ├── draw/      # 绘制工作流
+│   │   └── hash_/     # 计算哈希
+│   ├── config/        # 配置模型（Pydantic）
+│   ├── graph/         # 图工作流实现
+│   ├── agent/         # 代理构建器
+│   ├── model/         # 模型提供商
+│   └── mcp/           # MCP 服务器集成
+├── example/           # 示例配置
+├── tests/             # 测试文件
+└── docs/              # 文档和资产
+```
