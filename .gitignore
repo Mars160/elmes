@@ -1,5 +1,6 @@
 # Python-generated files
 .DS_Store
+.ruff_cache
 
 __pycache__/
 *.py[oc]
@@ -36,3 +37,8 @@ label_studio.txt
 
 # Virtual environments
 .venv
+
+# devs 开发中用到的一些测试文件
+.devs/
+
+
